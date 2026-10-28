@@ -21,7 +21,7 @@
 | C8 | **정리 B**: 0<p<q<1에서 내부 활성 조각은 정확히 11개(V02, V10, V11, V12, V14, V15, V16, V18, V19, V20, V21). 각 조각의 영역은 원뿔 facet 이차 부등식으로 주어지고, 달성분포는 (p,q)의 다항식이다 | **증명됨(컴퓨터 보조)** | `notes/proofs/theorem_AB.md`, `results/regions/region_certificate.json`(검증기 54/54 PASS), `results/regions/REGIONS.md`, `tests/test_regions.py` |
 | C9 | **따름정리 C**: R–N의 두 모멘트 BP 상한과 Theorem 3.1 순서 기반 상한(§3.2 강화 포함, SSS·Chebyshev도)은 D에서 R_V02 ∪ R_V16 ∪ R_V18 ∪ Z(내부 없음)에서만 tight하다. 나머지 8개 조각 내부(Z 제외)에서는 엄밀히 느슨하다 | **증명됨(컴퓨터 보조)** | `notes/proofs/theorem_AB.md` 따름정리 C, `tests/test_rn_bounds.py` |
 | C10 | 쌍대가 s=a+b만의 함수인 활성 조각은 V02(=C(s,2)/3, 비순서 SSS), V16(=(s−1)(s−2)/2, 1−S₁+S₂), V18(=1)뿐이다 | 정확 계산 검증 | `tests/test_rn_bounds.py::test_only_sum_only_vertices_carry_full_rank` |
-| C11 | 조각 경계의 삼중점 좌표(예: (0,2/3), (1/2,1), (1/2,1/2), (2/5,4/5), (3/4,3/4)) | 탐색(그림 관찰) | `results/regions/region_map.png` |
+| C11 | 조각 지도의 교점은 D 꼭짓점 3개와 교점 11개다. 네 조각이 만나는 점이 6개 있다. 예: (2/5,4/5)에서 V10/V11/V14/V15, (7/8−√33/8, 3/8+√33/24)에서 V02/V12/V16/V19 | 좌표와 "표의 조각들이 그 점에서 M을 정확히 달성"은 **정확 계산 검증**(sympy, `tests/test_junctions.py`). 교점 목록이 빠짐없는지와 인접 판정은 **탐색**(반지름 1e-4 원 표본) | `results/regions/JUNCTIONS.md`, `scripts/junctions.py` |
 
 ## 실패 접근
 

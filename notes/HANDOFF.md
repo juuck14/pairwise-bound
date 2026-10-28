@@ -6,7 +6,7 @@ _매 세션 종료 시 갱신한다. 첫 줄의 "다음 행동"이 바로 할 �
 1. **(사람)** `verifier/SPEC.md` 검토. point 모드 §1–7, region 모드 §8. 검토 후 SPEC 상단 상태 줄에 검토자·날짜를 기록한다.
 2. **(사람)** `notes/ai_log.md`의 "모델/버전" 칸 기입.
 3. 발표 자료: 데모(`python -m scripts.demo`), 영역도(`results/regions/region_map.png`), 정리 A·B·C 요약(`notes/proofs/theorem_AB.md`).
-4. (선택 확장) 조각 경계의 삼중점 좌표를 대수적으로 계산(C11). 따름정리 C의 Z 집합 정확 기술. p>q 영역 분류.
+4. (선택 확장) 교점 목록이 빠짐없는지 엄밀화(C11은 좌표·최소 달성만 정확). 따름정리 C의 Z 집합 정확 기술. p>q 영역 분류.
 5. (선택 확장) R–N을 인용한 2023–2026 후속 문헌 확인(신규성 판단 보강). SIAM 출판본 번호 대조(네트워크 허용 필요).
 
 ## 확인된 사실 (근거는 `claims.md`)
@@ -18,7 +18,7 @@ _매 세션 종료 시 갱신한다. 첫 줄의 "다음 행동"이 바로 할 �
 - C4–C7, C10: 비대칭, p=q 단면(R–N Thm 4.1 재현), 경계 p=0과 q=1, 두 모멘트 상한 비tight, s-only 쌍대.
 
 ## 미해결 질문
-- 조각 경계 교점(삼중점)의 정확한 좌표 목록 (C11, 그림 관찰만 있음)
+- 교점 목록이 빠짐없다는 엄밀한 증명 (C11: 좌표와 최소 달성은 정확, 목록 완전성과 인접은 수치 판정)
 - 따름정리 C의 내부 없는 예외 집합 Z가 정확히 어떤 곡선 조각인지
 - p>q 영역(연구 범위 밖)의 분류
 - 2+3 구조를 일반 (m,n) 그룹과 임계값 k로 확장했을 때의 구조
@@ -39,7 +39,8 @@ python -m scripts.classify                               # 영역 증서 + REGIO
 python -I verifier/verify.py results/certificates/p2_5-q3_5.json
 python -I verifier/verify.py results/regions/region_certificate.json
 python -m scripts.plot_regions                           # 영역도
-pytest                                                   # 981 tests
+python -m scripts.junctions                              # 교점표 (약 3.5분)
+pytest                                                   # 996 tests
 ```
 - 무작위 테스트 seed: 20261028, 20261029, 7, 11, 13 (`tests/`에 고정)
 

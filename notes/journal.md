@@ -123,3 +123,10 @@
 ### J12. 마무리 확인
 - 데모가 입력 점이 속한 조각 이름도 출력하도록 변경. 대표점 → V12.
 - 명령: `pytest` → 981 passed (18.6초)
+
+### J13. 조각 지도 교점
+- 작성: `scripts/junctions.py`, `tests/test_junctions.py`.
+- 명령: `python -m scripts.junctions` (약 3.5분, sympy가 연립 이차방정식 약 400개를 풂) → `results/regions/JUNCTIONS.md`.
+- 첫 시도 실패: 표본점이 D의 변 위에 떨어지면 변 위에서 동률인 조각들(p=0에서 q²로 같은 V01/V02/V12/V14/V15, 대각선에서 같은 V10/V11) 중 번호가 앞선 것이 잡혀 가짜 교점이 섞임 → 표본을 D의 엄격한 내부로 제한해 해결.
+- 결과: D 꼭짓점 3개 + 교점 11개, 그중 네 조각이 만나는 점 6개. 무리수 좌표 3개(7/8−√33/8, 1−√6/3, 1−√3/3).
+- `pytest tests/test_junctions.py` → 15 passed: 표의 조각들이 각 점에서 M을 정확히 달성.

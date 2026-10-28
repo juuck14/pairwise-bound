@@ -4,6 +4,7 @@ _`python -m scripts.classify`가 생성한 파일이다. 손으로 고치지 않
 
 - 근거 증서: `results/regions/region_certificate.json` (`python -I verifier/verify.py`로 검증)
 - 정리와 증명 구조: `notes/proofs/theorem_AB.md`
+- 조각 경계의 교점: `results/regions/JUNCTIONS.md`
 - 표기: A = X1+X2, B = X3+X4+X5. 달성분포는 (A,B)의 법칙 π(a,b)이며, 32상태 분포는 각 (a,b) 궤도 안에서 균등하게 나눠 얻는다.
 - 영역 D 안에서 부호가 고정된 선형 인수는 약분해 단순한 형태로 적었다(내부에서 동치). 전체 facet 부등식은 증서에 있다.
 
