@@ -87,7 +87,19 @@
 | Natarajan, Ramachandra, Tan, arXiv:2211.01596 | (n−1)-wise 독립. 가정이 달라 기록만 함 |
 | arXiv:2609.02659 | correlation gap. 목적이 달라 결과를 가져오지 않음 |
 
-## 4. 아직 확인하지 못한 것
+## 4. 후속 문헌 검색 (2026-10-28)
+- 수행한 검색:
+  - 웹 검색 2회: R–N 후속, 서로 다른 주변확률 k≥2 tight 결과
+  - arXiv 검색 3회(최신순): "pairwise independent Bernoulli tight bound", "pairwise independence probability bounds Natarajan", "pairwise independent events at least k"
+- 결과: R–N 이후 서로 다른 주변확률(2+3 구조 포함)에서 k≥2의 tight 결과를 다룬 문헌을 찾지 못했다.
+  - arXiv 검색에서 직접 관련된 결과는 2006.00516뿐이었다.
+  - Skorski, arXiv:2209.01587 "Tight Chernoff-Like Bounds Under Limited Independence": 초록을 확인했다. 평균 분산 제약 아래 k-wise 독립 합의 **모멘트** sharp 상한이라 직접 겹치지 않는다.
+  - arXiv:2006.00516의 abs 페이지에는 journal-ref가 기재되어 있지 않다(SIAM 출판 정보는 SUTD 저장소 스니펫에 근거).
+- 한계:
+  - Google Scholar 인용 목록과 SIAM 인용 정보는 확인하지 못했다(접근 불가).
+  - 따라서 신규성은 "이 검색 범위에서는 같은 결과가 없음"까지만 말할 수 있다. 확정이 아니다.
+
+## 5. 아직 확인하지 못한 것
 - SIAM 출판본의 정리 번호(arXiv v6와 같은지)
 - R–N을 인용한 2023–2026년 후속 연구 중 서로 다른 주변확률 k≥2의 tight 결과가 있는지
 - Mádi-Nagy & Prékopa 이변량 이산 모멘트 문헌에 P(A+B≥k)형 목적의 닫힌꼴이 있는지
