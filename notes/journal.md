@@ -84,3 +84,7 @@
 - 명령: `time python -m scripts.demo` → 종료 코드 0, 28/28 PASS. 실측 실행 시간 0.84초(real), 이 컨테이너 기준.
 - 명령: `pytest` → 356 passed (실측 4.5초).
 - 출력 요약: M=61/75. 12상태 지지 6점, 32상태 지지 17점. f(a,b)=a−(1/3)a(a−1)+(1/6)b(b−1)−(1/6)ab. Q(p,q)=−(2/3)p²−pq+q²+2p. HiGHS 차이 ≤ 4.4e−16. 두 모멘트 상한 107/125.
+
+### J9. 깨끗한 클론 재현 확인
+- 명령: 임시 디렉터리에 `git clone` → `python3 -m venv .venv` → `pip install -e '.[dev,symbolic,plot]'` → `python -m scripts.demo` → `pytest`
+- 결과: 데모 28/28 PASS, 356 passed. 데모가 다시 쓴 증서 파일이 커밋된 파일과 바이트 단위로 같음(`git status` 변경 없음).
