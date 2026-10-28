@@ -88,3 +88,24 @@
 ### J9. 깨끗한 클론 재현 확인
 - 명령: 임시 디렉터리에 `git clone` → `python3 -m venv .venv` → `pip install -e '.[dev,symbolic,plot]'` → `python -m scripts.demo` → `pytest`
 - 결과: 데모 28/28 PASS, 356 passed. 데모가 다시 쓴 증서 파일이 커밋된 파일과 바이트 단위로 같음(`git status` 변경 없음).
+
+### J10. 정리 A·B: 영역 분류
+- 작성: `src/pwbound/{poly,trimin,parametric,region_cert}.py`, `scripts/{scan,classify,plot_regions}.py`, `verifier/SPEC.md` §8(region 모드, 코드보다 먼저), `verifier/verify.py` region 모드, `tests/test_regions.py`.
+- 명령:
+  - `python -m scripts.scan --n 120 --record` → `results/runs/scan-n120/` (탐색, 4.6초)
+  - `python -m scripts.classify` → `results/regions/region_certificate.json`, `results/regions/REGIONS.md`, 검증기 54/54 PASS (약 10초)
+  - `python -m scripts.plot_regions` → `results/regions/region_map.png` (그림은 예시이며 증거가 아님)
+  - `pytest` → 373 passed (16.8초)
+- 결과 (검증기 PASS = 정확 계산 검증):
+  - 정리 A의 계산 전제를 검증기가 독립 재계산으로 확인: rank 6, 곱분포 항등식, 쌍대 꼭짓점 21개 재열거 일치.
+  - 정리 B:
+    - 0<p<q<1에서 내부 활성 조각은 정확히 11개(V02, V10, V11, V12, V14, V15, V16, V18, V19, V20, V21). 각 조각에 유리수 목격점이 있다.
+    - 나머지 10개는 D 전체 지배 덮개를 가진다. 9개는 단일 지배자, V04는 4분할(V02, V10).
+  - 영역 기술: 꼭짓점 k의 영역 = {b(p,q) ∈ cone(tight 열)} = facet 부등식들. 퇴화 꼭짓점은 V06(tight 7, 기저 6, facet 10)과 V16(tight 8, 기저 25, facet 16).
+  - 두 영역 기술(이차식 최솟값 vs 원뿔 소속)이 25×25 격자의 모든 점에서 일치(테스트).
+  - 대표점 (2/5,3/5)은 V12 조각의 내부 점이며, 목격점 탐색에서 V12의 첫 목격점으로 나왔다.
+- 관찰(탐색 → 문서화 예정): V02 = (p²+6pq+3q²)/3은 비순서 SSS 상한 S₂/C(3,2)와 같고, V16 = 1 − S₁ + S₂.
+- 실패/수정:
+  - 격자 기반 목격점 탐색이 꼭짓점마다 반복돼 2분 이상 걸림 → 한 번의 순회로 바꿔 8초.
+  - 그림 라벨이 배열 테두리 쪽으로 쏠림(거리 변환이 테두리를 경계로 보지 않음) → 마스크에 여백을 덧대 해결.
+- 인식 정정: 계획 단계에서 퇴화 꼭짓점을 "M=1 조각"으로 짐작했으나 실제로는 V06과 V16이었다(V18 M=1은 비퇴화).

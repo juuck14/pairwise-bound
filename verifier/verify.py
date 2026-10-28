@@ -249,16 +249,447 @@ def run_checks(c, allow_outside_scope=False):
     return checks
 
 
+# ============================================================ region mode
+# SPEC section 8. Everything below is recomputed from the problem definition.
+
+REGION_FORMAT = "pw5-region/v1"
+STATES12 = tuple((a, b) for a in range(3) for b in range(4))
+MONOMIALS = ((0, 0), (1, 0), (0, 1), (2, 0), (0, 2), (1, 1))
+RHS_SCALE = (1, 2, 3, 2, 6, 6)
+DOMAIN = ((Fraction(0), Fraction(0)), (Fraction(0), Fraction(1)), (Fraction(1), Fraction(1)))
+MAX_COVER_DEPTH = 30
+
+
+def col12(a, b):
+    return (1, a, b, a * (a - 1), b * (b - 1), a * b)
+
+
+def ind12(a, b):
+    return 1 if a + b >= THRESHOLD else 0
+
+
+def dot(u, v):
+    return sum(x * y for x, y in zip(u, v))
+
+
+# polynomials in (p, q): {(i, j): Fraction} for p^i q^j
+
+def p_clean(f):
+    return {m: c for m, c in f.items() if c != 0}
+
+
+def p_add(f, g, scale=1):
+    out = dict(f)
+    for m, c in g.items():
+        out[m] = out.get(m, 0) + scale * c
+    return p_clean(out)
+
+
+def p_mul(f, g):
+    out = {}
+    for (i1, j1), c1 in f.items():
+        for (i2, j2), c2 in g.items():
+            key = (i1 + i2, j1 + j2)
+            out[key] = out.get(key, 0) + c1 * c2
+    return p_clean(out)
+
+
+def p_eval(f, p, q):
+    return sum(c * p ** i * q ** j for (i, j), c in f.items())
+
+
+def rhs_combination(h):
+    """sum_r h_r * b_r(p, q) where b(p, q) = (1, 2p, 3q, 2p^2, 6q^2, 6pq)."""
+    return p_clean({m: Fraction(s) * Fraction(c) for m, s, c in zip(MONOMIALS, RHS_SCALE, h)})
+
+
+def parse_poly(obj, where):
+    if not isinstance(obj, dict):
+        raise FormatError("E_FORMAT", f"{where}: expected a polynomial object")
+    out = {}
+    for key, value in obj.items():
+        m = re.fullmatch(r"([0-2]),([0-2])", key, re.ASCII)
+        if not m or int(m.group(1)) + int(m.group(2)) > 2:
+            raise FormatError("E_FORMAT", f"{where}: bad monomial key {key!r}")
+        out[(int(m.group(1)), int(m.group(2)))] = rational(value, f"{where}[{key}]")
+    return p_clean(out)
+
+
+# exact linear algebra
+
+def lin_solve(matrix, rhs):
+    n = len(matrix)
+    aug = [[Fraction(v) for v in row] + [Fraction(rhs[i])] for i, row in enumerate(matrix)]
+    for col in range(n):
+        piv = next((r for r in range(col, n) if aug[r][col] != 0), None)
+        if piv is None:
+            return None
+        aug[col], aug[piv] = aug[piv], aug[col]
+        lead = aug[col][col]
+        aug[col] = [v / lead for v in aug[col]]
+        for r in range(n):
+            if r != col and aug[r][col] != 0:
+                factor = aug[r][col]
+                aug[r] = [vr - factor * vc for vr, vc in zip(aug[r], aug[col])]
+    return [aug[i][n] for i in range(n)]
+
+
+def row_reduce(rows):
+    """Reduced row echelon form; returns (matrix, pivot columns)."""
+    m = [[Fraction(v) for v in r] for r in rows]
+    pivots, r = [], 0
+    for c in range(len(m[0]) if m else 0):
+        piv = next((i for i in range(r, len(m)) if m[i][c] != 0), None)
+        if piv is None:
+            continue
+        m[r], m[piv] = m[piv], m[r]
+        lead = m[r][c]
+        m[r] = [v / lead for v in m[r]]
+        for i in range(len(m)):
+            if i != r and m[i][c] != 0:
+                factor = m[i][c]
+                m[i] = [vi - factor * vr for vi, vr in zip(m[i], m[r])]
+        pivots.append(c)
+        r += 1
+    return m, pivots
+
+
+def lin_rank(rows):
+    return len(row_reduce(rows)[1])
+
+
+def null_vector(rows, n):
+    """Nonzero h with rows @ h = 0 when the nullspace is 1-dimensional, else None."""
+    m, pivots = row_reduce(rows)
+    free = [c for c in range(n) if c not in pivots]
+    if len(free) != 1:
+        return None
+    h = [Fraction(0)] * n
+    h[free[0]] = Fraction(1)
+    for i, c in enumerate(pivots):
+        h[c] = -m[i][free[0]]
+    return h
+
+
+def _gcd(a, b):
+    a, b = abs(a), abs(b)
+    while b:
+        a, b = b, a % b
+    return a
+
+
+def primitive(h):
+    den = 1
+    for v in h:
+        den = den * v.denominator // _gcd(den, v.denominator)
+    ints = [int(v * den) for v in h]
+    g = 0
+    for v in ints:
+        g = _gcd(g, v)
+    return tuple(v // g for v in ints)
+
+
+# exact minimum of a quadratic over a triangle (SPEC 8.4)
+
+def tri_min(f, tri):
+    get = lambda m: Fraction(f.get(m, 0))
+    a, b, c, d, e = get((2, 0)), get((0, 2)), get((1, 1)), get((1, 0)), get((0, 1))
+    pts = [tuple(Fraction(v) for v in vertex) for vertex in tri]
+    for i in range(3):
+        u, v = pts[i], pts[(i + 1) % 3]
+        dx, dy = v[0] - u[0], v[1] - u[1]
+        alpha = a * dx * dx + b * dy * dy + c * dx * dy
+        beta = 2 * a * u[0] * dx + 2 * b * u[1] * dy + c * (u[0] * dy + u[1] * dx) + d * dx + e * dy
+        if alpha > 0:
+            t = -beta / (2 * alpha)
+            if 0 < t < 1:
+                pts.append((u[0] + t * dx, u[1] + t * dy))
+    det = 4 * a * b - c * c
+    if det > 0 and a > 0:
+        p0 = (c * e - 2 * b * d) / det
+        q0 = (c * d - 2 * a * e) / det
+        (x1, y1), (x2, y2), (x3, y3) = tri
+        den = (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3)
+        l1 = ((y2 - y3) * (p0 - x3) + (x3 - x2) * (q0 - y3)) / den
+        l2 = ((y3 - y1) * (p0 - x3) + (x1 - x3) * (q0 - y3)) / den
+        if l1 >= 0 and l2 >= 0 and 1 - l1 - l2 >= 0:
+            pts.append((p0, q0))
+    return min(p_eval(f, x, y) for x, y in pts)
+
+
+def split_triangle(tri):
+    (a, b, c) = tri
+    mid = lambda u, v: ((u[0] + v[0]) / 2, (u[1] + v[1]) / 2)
+    ab, bc, ca = mid(a, b), mid(b, c), mid(c, a)
+    return ((a, ab, ca), (ab, b, bc), (ca, bc, c), (ab, bc, ca))
+
+
+# problem-derived objects
+
+def enumerate_dual_vertices():
+    found = set()
+    for basis in combinations(range(12), 6):
+        states = [STATES12[j] for j in basis]
+        y = lin_solve([list(col12(*s)) for s in states], [ind12(*s) for s in states])
+        if y is None:
+            continue
+        if all(dot(y, col12(*s)) >= ind12(*s) for s in STATES12):
+            found.add(tuple(y))
+    return found
+
+
+def tight_set(y):
+    return tuple(s for s in STATES12 if dot(y, col12(*s)) == ind12(*s))
+
+
+def facets_of(states):
+    gens = [col12(*s) for s in states]
+    out = set()
+    for subset in combinations(range(len(gens)), 5):
+        h = null_vector([gens[i] for i in subset], 6)
+        if h is None:
+            continue
+        values = [dot(h, g) for g in gens]
+        if any(v > 0 for v in values) and any(v < 0 for v in values):
+            continue
+        if any(v < 0 for v in values):
+            h = [-v for v in h]
+        out.add(primitive(h))
+    return out
+
+
+def parse_state(text, where):
+    if not isinstance(text, str) or not re.fullmatch(r"[0-2],[0-3]", text, re.ASCII):
+        raise FormatError("E_FORMAT", f"{where}: bad state {text!r}")
+    a, b = text.split(",")
+    return (int(a), int(b))
+
+
+def parse_tree(node, where, depth=0):
+    if depth > MAX_COVER_DEPTH:
+        raise FormatError("E_FORMAT", f"{where}: cover tree deeper than {MAX_COVER_DEPTH}")
+    if isinstance(node, dict) and set(node) == {"dominator"} and isinstance(node["dominator"], str):
+        return node
+    if isinstance(node, dict) and set(node) == {"split"} and isinstance(node["split"], list) \
+            and len(node["split"]) == 4:
+        return {"split": [parse_tree(c, where, depth + 1) for c in node["split"]]}
+    raise FormatError("E_FORMAT", f"{where}: bad cover tree node")
+
+
+def _list_of_objects(value, keys, where):
+    if not isinstance(value, list):
+        raise FormatError("E_FORMAT", f"{where}: expected a list")
+    for i, item in enumerate(value):
+        expect_keys(item, keys, f"{where}[{i}]")
+    return value
+
+
+def parse_region_certificate(cert):
+    expect_keys(cert, ("format", "domain", "dual_vertices", "active", "inactive", "regions",
+                       "maximizers", "provenance"), "top level")
+    if cert["domain"] != [["0", "0"], ["0", "1"], ["1", "1"]]:
+        raise FormatError("E_PROBLEM", f"domain must be the triangle (0,0),(0,1),(1,1)")
+    verts = {}
+    for i, item in enumerate(_list_of_objects(cert["dual_vertices"], ("id", "y"), "dual_vertices")):
+        if not isinstance(item["id"], str) or item["id"] in verts:
+            raise FormatError("E_FORMAT", f"dual_vertices[{i}]: missing or repeated id")
+        if not isinstance(item["y"], list) or len(item["y"]) != 6:
+            raise FormatError("E_FORMAT", f"dual_vertices[{i}]: y must have 6 entries")
+        verts[item["id"]] = tuple(rational(v, f"dual_vertices[{i}].y") for v in item["y"])
+    active = []
+    for i, item in enumerate(_list_of_objects(cert["active"], ("id", "witness"), "active")):
+        w = item["witness"]
+        if not isinstance(w, list) or len(w) != 2:
+            raise FormatError("E_FORMAT", f"active[{i}]: witness must be [p, q]")
+        active.append((item["id"], rational(w[0], f"active[{i}]"), rational(w[1], f"active[{i}]")))
+    inactive = [(item["id"], parse_tree(item["cover"], f"inactive[{i}]"))
+                for i, item in enumerate(_list_of_objects(cert["inactive"], ("id", "cover"), "inactive"))]
+    regions = []
+    for i, item in enumerate(_list_of_objects(cert["regions"], ("id", "tight_states", "facets",
+                                                                 "redundant_in_domain"), "regions")):
+        if not isinstance(item["tight_states"], list) or not isinstance(item["facets"], list):
+            raise FormatError("E_FORMAT", f"regions[{i}]: lists expected")
+        states = tuple(parse_state(s, f"regions[{i}]") for s in item["tight_states"])
+        facets = []
+        for h in item["facets"]:
+            if not isinstance(h, list) or len(h) != 6 or not all(_is_plain_int(v) for v in h):
+                raise FormatError("E_FORMAT", f"regions[{i}]: facet must be 6 integers")
+            facets.append(tuple(h))
+        redundant = item["redundant_in_domain"]
+        if not isinstance(redundant, list) or not all(_is_plain_int(v) and 0 <= v < len(facets)
+                                                      for v in redundant):
+            raise FormatError("E_FORMAT", f"regions[{i}]: bad redundant_in_domain")
+        regions.append((item["id"], states, facets, redundant))
+    maximizers = []
+    for i, item in enumerate(_list_of_objects(cert["maximizers"], ("id", "basis", "x"), "maximizers")):
+        if not isinstance(item["basis"], list) or not isinstance(item["x"], list) \
+                or len(item["basis"]) != 6 or len(item["x"]) != 6:
+            raise FormatError("E_FORMAT", f"maximizers[{i}]: basis and x need 6 entries")
+        basis = tuple(parse_state(s, f"maximizers[{i}]") for s in item["basis"])
+        xs = [parse_poly(f, f"maximizers[{i}].x") for f in item["x"]]
+        maximizers.append((item["id"], basis, xs))
+    return {"vertices": verts, "active": active, "inactive": inactive,
+            "regions": regions, "maximizers": maximizers}
+
+
+def run_region_checks(c):
+    checks = []
+
+    def record(code, ok, detail=""):
+        checks.append({"code": code, "ok": bool(ok), "detail": "" if ok else detail})
+
+    verts = c["vertices"]
+    Q = {vid: rhs_combination(y) for vid, y in verts.items()}
+
+    # Theorem A premises
+    columns = [col12(*s) for s in STATES12]
+    rank = lin_rank([[col[r] for col in columns] for r in range(6)])
+    record("RG_RANK", rank == 6, f"rank = {rank}")
+    p_var, q_var = {(1, 0): Fraction(1)}, {(0, 1): Fraction(1)}
+    one = {(0, 0): Fraction(1)}
+    one_minus_p, one_minus_q = p_add(one, p_var, -1), p_add(one, q_var, -1)
+
+    def power(f, k):
+        out = dict(one)
+        for _ in range(k):
+            out = p_mul(out, f)
+        return out
+
+    law = {}
+    for a, b in STATES12:
+        ca = (1, 2, 1)[a]
+        cb = (1, 3, 3, 1)[b]
+        law[(a, b)] = p_mul(p_mul(power(p_var, a), power(one_minus_p, 2 - a)),
+                            p_mul(power(q_var, b), power(one_minus_q, 3 - b)))
+        law[(a, b)] = {m: v * ca * cb for m, v in law[(a, b)].items()}
+    bad = []
+    for r in range(6):
+        lhs = {}
+        for s in STATES12:
+            lhs = p_add(lhs, law[s], col12(*s)[r])
+        target = rhs_combination([1 if k == r else 0 for k in range(6)])
+        if p_add(lhs, target, -1):
+            bad.append(f"row {r}")
+    record("RG_FEASIBLE", not bad, "product law violates " + ", ".join(bad))
+    enumerated = enumerate_dual_vertices()
+    claimed = set(verts.values())
+    record("RG_VERTICES", enumerated == claimed and len(claimed) == len(verts),
+           f"enumerated {len(enumerated)} vertices, certificate lists {len(verts)}; "
+           f"missing {len(enumerated - claimed)}, spurious {len(claimed - enumerated)}")
+
+    # Theorem B (i), (ii)
+    act_ids = [vid for vid, _, _ in c["active"]]
+    inact_ids = [vid for vid, _ in c["inactive"]]
+    all_listed = act_ids + inact_ids
+    record("RG_PARTITION", sorted(all_listed) == sorted(verts) and len(set(all_listed)) == len(all_listed),
+           "active and inactive ids must partition the vertex ids")
+    for vid, p, q in c["active"]:
+        ok = vid in Q and 0 < p < q < 1
+        detail = f"witness ({p}, {q}) is not inside 0<p<q<1 or id unknown"
+        if ok:
+            here = p_eval(Q[vid], p, q)
+            beaten = [w for w in Q if w != vid and p_eval(Q[w], p, q) <= here]
+            ok = not beaten
+            detail = f"at ({p}, {q}) Q_{vid} = {here} is not below {beaten}"
+        record(f"RG_ACTIVE_{vid}", ok, detail)
+    for vid, tree in c["inactive"]:
+        failures = []
+
+        def walk(node, tri):
+            if "dominator" in node:
+                w = node["dominator"]
+                if vid not in Q or w not in Q or w == vid:
+                    failures.append(f"bad dominator {w}")
+                    return
+                m = tri_min(p_add(Q[vid], Q[w], -1), tri)
+                if m < 0:
+                    failures.append(f"Q_{vid} - Q_{w} reaches {m} on triangle {tri}")
+            else:
+                for child, sub in zip(node["split"], split_triangle(tri)):
+                    walk(child, sub)
+
+        walk(tree, DOMAIN)
+        record(f"RG_INACTIVE_{vid}", not failures, "; ".join(map(str, failures[:3])))
+
+    # Theorem B (iii)
+    region_ids = [vid for vid, _, _, _ in c["regions"]]
+    record("RG_REGION_LIST", sorted(region_ids) == sorted(act_ids),
+           "regions must list each active id exactly once")
+    for vid, states, facets, redundant in c["regions"]:
+        problems = []
+        if vid not in verts:
+            record(f"RG_REGION_{vid}", False, "unknown id")
+            continue
+        tight = tight_set(verts[vid])
+        if tuple(sorted(states)) != tuple(sorted(tight)):
+            problems.append(f"tight states {sorted(tight)} != claimed {sorted(states)}")
+        if lin_rank([col12(*s) for s in tight]) != 6:
+            problems.append("tight columns do not span R^6")
+        computed = facets_of(tight)
+        if set(facets) != computed or len(set(facets)) != len(facets):
+            problems.append(f"facets differ: computed {len(computed)}, claimed {len(facets)}")
+        for k in redundant:
+            if tri_min(rhs_combination(facets[k]), DOMAIN) < 0:
+                problems.append(f"facet {k} is not redundant on the domain")
+        record(f"RG_REGION_{vid}", not problems, "; ".join(problems))
+
+    # Theorem B (iv)
+    counter = {}
+    for vid, basis, xs in c["maximizers"]:
+        n = counter[vid] = counter.get(vid, 0) + 1
+        problems = []
+        if vid not in verts:
+            record(f"RG_MAXIMIZER_{vid}_{n}", False, "unknown id")
+            continue
+        tight = tight_set(verts[vid])
+        if len(set(basis)) != 6 or not set(basis) <= set(tight):
+            problems.append("basis must be 6 distinct tight states")
+        if lin_rank([col12(*s) for s in basis]) != 6:
+            problems.append("basis columns are singular")
+        for r in range(6):
+            lhs = {}
+            for s, x in zip(basis, xs):
+                lhs = p_add(lhs, x, col12(*s)[r])
+            if p_add(lhs, rhs_combination([1 if k == r else 0 for k in range(6)]), -1):
+                problems.append(f"constraint {r} is not an identity")
+        objective = {}
+        for s, x in zip(basis, xs):
+            objective = p_add(objective, x, ind12(*s))
+        if p_add(objective, Q[vid], -1):
+            problems.append("objective is not identically Q")
+        if len(tight) == 6 and not problems:
+            facet_polys = [rhs_combination(h) for h in facets_of(tight)]
+            used = set()
+            for x in xs:
+                match = None
+                for k, g in enumerate(facet_polys):
+                    if k in used or not g or set(g) != set(x):
+                        continue
+                    ratios = {x[m] / g[m] for m in g}
+                    if len(ratios) == 1 and ratios.pop() > 0:
+                        match = k
+                        break
+                if match is None or not x:
+                    problems.append("a component is not a positive multiple of a distinct facet")
+                    break
+                used.add(match)
+        record(f"RG_MAXIMIZER_{vid}_{n}", not problems, "; ".join(problems))
+    return checks
+
+
 # ------------------------------------------------------------------ entry
 
 def verify_text(text, allow_outside_scope=False):
     """Return {"exit_code", "verdict", "checks", "error"} for a certificate text."""
     try:
-        parsed = parse_certificate(load_json(text))
+        cert = load_json(text)
+        if isinstance(cert, dict) and cert.get("format") == REGION_FORMAT:
+            checks = run_region_checks(parse_region_certificate(cert))
+        else:
+            checks = run_checks(parse_certificate(cert), allow_outside_scope)
     except FormatError as exc:
         return {"exit_code": 2, "verdict": "ERROR", "checks": [],
                 "error": {"code": exc.code, "detail": exc.detail}}
-    checks = run_checks(parsed, allow_outside_scope)
     ok = all(c["ok"] for c in checks)
     return {"exit_code": 0 if ok else 1, "verdict": "PASS" if ok else "FAIL",
             "checks": checks, "error": None}
