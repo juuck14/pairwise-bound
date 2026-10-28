@@ -56,7 +56,8 @@ def test_three_exact_routes_agree(p, q):
 
 @pytest.mark.parametrize("p, q", random_points(10, seed=RNG_SEED + 1)
                          + [(F(0), F(0)), (F(0), F(1)), (F(1), F(1)), (F(0), F(1, 3)),
-                            (F(1, 4), F(1)), (F(1, 2), F(1, 2)), (F(3, 4), F(3, 4))])
+                            (F(1, 4), F(1)), (F(1, 2), F(1, 2)), (F(3, 4), F(3, 4)),
+                            (F(3, 5), F(2, 5))])
 def test_generated_certificates_pass_the_verifier(verifier, p, q):
     _, cert = make_certificate(p, q)
     result = verifier.verify_text(json.dumps(cert), allow_outside_scope=True)
