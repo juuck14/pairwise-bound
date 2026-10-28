@@ -33,3 +33,14 @@
   - `pip install scipy pytest sympy matplotlib`
   - `pip freeze > requirements.lock`
 - 설치 결과: numpy 2.5.4, scipy 1.18.1, sympy 1.14.0, matplotlib 3.11.2, pytest 9.2.0 (전체 목록은 `requirements.lock`).
+
+### J4. 선행연구 원문 확인
+- 명령 (작업 디렉터리 밖의 임시 폴더에 내려받아 텍스트로만 읽음):
+  - `curl -sSL -o abs.html https://arxiv.org/abs/2006.00516`
+  - `curl -sSL -o src.tar.gz https://arxiv.org/e-print/2006.00516`
+  - `tar -xzf src.tar.gz`
+- 결과:
+  - 판본 v1(2020-05-31)–v6(2022-11-23) 확인. v6 소스 `PairwiseIndependence_V4.tex`를 읽음.
+  - 정리 번호와 적용 여부는 `notes/literature.md`에 기록.
+  - 결론: p=q 단면은 Theorem 4.1의 특수경우(재현). p<q의 2+3 구조에 직접 적용되는 tight 결과는 원문에 없음. Prop. 4.5는 n−1개 동일 구조라 해당 없음. Theorem 3.1 상한을 (2/5,3/5)에 손으로 대입하면 107/125로, 61/75보다 큼(코드 재검증 예정).
+- 실패/제약: SIAM 출판본은 접근 차단으로 번호 대조 불가.
