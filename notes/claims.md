@@ -12,7 +12,7 @@
 |---|---|---|---|
 | C1 | M(2/5,3/5) = 61/75 | **정확 계산 검증** | 독립 검증기 PASS: `tests/test_verifier.py::test_seed_certificate_*` (32상태 원·쌍대 일치). 검증기 SPEC은 사람 검토 전 |
 | C2 | 32상태 LP와 12상태 LP의 최적값이 같고, 최적해가 복원 사상으로 대응한다 | 추측(증명 작성 예정) | 계획 1.3절 |
-| C3 | M(p,q) = min_{y∈V} Q_y(p,q), V는 21개의 쌍대 꼭짓점 | 탐색 | journal J2 |
+| C3 | M(p,q) = min_{y∈V} Q_y(p,q), V는 21개의 쌍대 꼭짓점 | 정확 계산 검증(표본점), 증명 작성 예정 | 꼭짓점 21개는 전수열거로 정확히 얻음(`tests/test_exact.py::test_enumeration_counts`). 무작위 유리점 15곳에서 세 정확 경로 일치(`test_three_exact_routes_agree`) |
 | C4 | M은 p↔q에 대해 대칭이 아니다 (예: M(2/5,3/5) ≠ M(3/5,2/5)) | 탐색 | journal J2 |
 | C5 | p=q 단면에서 12상태 값 = 단변수 S 이항모멘트 LP 값 | 탐색 | journal J2 |
 
