@@ -11,7 +11,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from pwbound import float_lp, model, univariate
+from pwbound import float_lp, model, parametric, univariate
 from pwbound.cert import certificate_filename, write_certificate
 from pwbound.rational import fmt, parse_rational
 from pwbound.report import quadratic_string, reduced_dual_string
@@ -45,6 +45,8 @@ def main(argv=None):
 
     section("Maximum")
     print(f"M(p, q) = {fmt(value)}  ~= {float(value):.10f}")
+    _, pieces = parametric.minimizers(p, q)
+    print(f"piece(s) attaining it: {', '.join(pieces)}  (formulas and regions: results/regions/REGIONS.md)")
 
     section("Maximizing distribution, 12-state model (A = X1+X2, B = X3+X4+X5)")
     for (a, b), v in sol["pi"].items():

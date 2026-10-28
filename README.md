@@ -46,14 +46,30 @@ VERDICT: PASS
 
 상태 정의와 근거는 [`notes/claims.md`](notes/claims.md)에 있다.
 
+**주결과 (컴퓨터 보조 증명, 독립 검증기 PASS).** 0 ≤ p ≤ q ≤ 1에서 M(p,q)는 11개 조각으로 나뉜 조각별 이차식이다. 각 조각에서 다음이 정확히 주어진다([`notes/proofs/theorem_AB.md`](notes/proofs/theorem_AB.md), [`results/regions/REGIONS.md`](results/regions/REGIONS.md)).
+- 공식(이차식)
+- 영역(이차 부등식)
+- 달성분포((p,q)의 다항식)
+
+![조각 지도](results/regions/region_map.png)
+
 | 주장 | 상태 |
 |---|---|
-| M(2/5,3/5) = 61/75 | 정확 계산 검증 (독립 검증기 PASS) |
-| 32상태 LP와 12상태 (A,B) LP가 동치 (S₂×S₃ 대칭화) | 증명됨 ([`notes/proofs/reduction.md`](notes/proofs/reduction.md)) |
-| M(p,q)는 21개 쌍대 꼭짓점 이차식의 최솟값 | 정확 계산 검증(표본점), 증명 작성 중 |
+| M(2/5,3/5) = 61/75, 대표점은 조각 V12 = 2p − 2p²/3 + q² − pq의 내부 | 정확 계산 검증 |
+| 32상태 LP ⇔ 12상태 (A,B) LP (S₂×S₃ 대칭화) | 증명됨 ([`reduction.md`](notes/proofs/reduction.md)) |
+| 정리 A: [0,1]²에서 M = 21개 쌍대 꼭짓점 이차식의 최솟값 | 증명됨 (컴퓨터 보조) |
+| 정리 B: D 내부의 활성 조각은 정확히 11개. 영역은 facet 부등식, 달성분포는 다항식 | 증명됨 (컴퓨터 보조) |
+| 따름정리 C: Ramachandra–Natarajan의 두 모멘트·순서 기반 상한은 V02, V16, V18 조각에서만 tight (나머지 8개 조각 내부에서는 엄밀히 느슨) | 증명됨 (컴퓨터 보조) |
 | p↔q 비대칭: M(3/5,2/5)=19/25 ≠ 61/75 | 정확 계산 검증 |
-| p=q 단면 = Ramachandra–Natarajan Theorem 4.1 (재현) | 정확 계산 검증 + 문헌 |
-| S의 두 모멘트만 쓰는 상한(107/125)은 대표점에서 tight하지 않음 | 정확 계산 검증 |
+| p=q 단면 = R–N Theorem 4.1 (재현) | 정확 계산 검증 + 문헌 |
+
+조각 분류를 재현하려면 다음을 실행한다.
+
+```bash
+python -m scripts.classify          # 증서 + REGIONS.md 생성, 검증기 실행 (약 10초)
+python -I verifier/verify.py results/regions/region_certificate.json
+python -m scripts.plot_regions      # 그림 (예시용)
+```
 
 ## 저장소 구조
 
@@ -63,11 +79,14 @@ VERDICT: PASS
 | `src/pwbound/exact_lp.py` | 12상태 LP 기저 전수열거 (Fraction), 쌍대 꼭짓점 |
 | `src/pwbound/float_lp.py` | HiGHS 32·12상태 LP (교차확인 전용, 제약을 독립적으로 구성) |
 | `src/pwbound/univariate.py` | S의 이항모멘트 LP (p=q 대조, 두 모멘트 상한) |
-| `src/pwbound/cert.py` | 증서 JSON 생성 |
+| `src/pwbound/cert.py` | 점 증서 JSON 생성 |
+| `src/pwbound/parametric.py`, `region_cert.py`, `poly.py`, `trimin.py` | 매개변수 LP: tight 집합, 원뿔 facet, 목격점, 지배 덮개, 영역 증서 |
+| `src/pwbound/rn_bounds.py` | Ramachandra–Natarajan 상한 구현과 쌍대점 집합 |
 | `verifier/SPEC.md`, `verifier/verify.py` | 독립 검증기 명세와 구현 (표준 라이브러리만) |
 | `scripts/demo.py` | 한 명령 데모 |
 | `scripts/make_certificate.py` | 임의 (p,q)의 증서 생성 |
-| `results/certificates/` | 증서 JSON |
+| `scripts/classify.py`, `scripts/plot_regions.py`, `scripts/scan.py` | 조각 분류·영역도·격자 탐색 |
+| `results/certificates/`, `results/regions/` | 점 증서, 영역 증서·문서·그림 |
 | `tests/` | 모형, 정확 해법, 교차확인, 검증기 음성 테스트, 검증기 독립성 |
 | `notes/` | 계획, 문제 정의, 증명, 주장 상태, 문헌, 연구일지, AI 상호작용 기록, 인계 문서 |
 
