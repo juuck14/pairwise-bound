@@ -11,7 +11,7 @@
 | ID | 주장 | 상태 | 근거 |
 |---|---|---|---|
 | C1 | M(2/5,3/5) = 61/75 | **정확 계산 검증** | 독립 검증기 PASS: `tests/test_verifier.py::test_seed_certificate_*` (32상태 원·쌍대 일치). 검증기 SPEC은 사람 검토 전 |
-| C2 | 32상태 LP와 12상태 LP의 최적값이 같고, 최적해가 복원 사상으로 대응한다 | 추측(증명 작성 예정) | 계획 1.3절 |
+| C2 | 32상태 LP와 12상태 LP의 최적값이 같고, 최적해가 복원 사상으로 대응한다(정리 R). 쌍대도 대응한다(명제 D) | **증명됨** (기법은 R–N Thm 4.1 증명의 응용) | `notes/proofs/reduction.md`; 계산 보조: `tests/test_model.py`, `tests/test_crosscheck.py::test_highs_full_and_reduced_match_exact` |
 | C3 | M(p,q) = min_{y∈V} Q_y(p,q), V는 21개의 쌍대 꼭짓점 | 정확 계산 검증(표본점), 증명 작성 예정 | 꼭짓점 21개는 전수열거로 정확히 얻음(`tests/test_exact.py::test_enumeration_counts`). 무작위 유리점 15곳에서 세 정확 경로 일치(`test_three_exact_routes_agree`) |
 | C4 | M은 p↔q에 대해 대칭이 아니다: M(2/5,3/5)=61/75, M(3/5,2/5)=19/25 | **정확 계산 검증** | 두 점의 증서가 검증기 PASS (`tests/test_exact.py`), `tests/test_crosscheck.py::test_not_symmetric_in_p_and_q` |
 | C5 | p=q 단면에서 12상태 값 = 단변수 S 이항모멘트 LP 값 | 정확 계산 검증(p=k/97, 98점) | `tests/test_crosscheck.py::test_diagonal_matches_fully_symmetric_model`. p=q이면 S₅ 대칭화로 두 모형이 같은 LP의 축소이므로 정리로도 성립(R–N Thm 4.1 증명과 같은 논법) |

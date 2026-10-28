@@ -78,3 +78,9 @@
   - 상식 범위: 곱분포 값 ≤ M ≤ min(1,(2p+3q)/3) (seed=13, 20점).
   - 비대칭: M(2/5,3/5)=61/75, M(3/5,2/5)=19/25. 두 점 모두 증서가 검증기 PASS.
   - 경계: M(0,q)=q² (q≤1/2), 1−3q+3q² (q≥1/2), q=k/60 61점. R–N Theorem 4.1(n=k=3)과 일치. M(p,1)=1, 61점.
+
+### J8. 4단계: 데모
+- 작성: `scripts/demo.py`, `src/pwbound/report.py`, `tests/test_demo.py`, `notes/proofs/reduction.md`, README 갱신.
+- 명령: `time python -m scripts.demo` → 종료 코드 0, 28/28 PASS. 실측 실행 시간 0.84초(real), 이 컨테이너 기준.
+- 명령: `pytest` → 356 passed (실측 4.5초).
+- 출력 요약: M=61/75. 12상태 지지 6점, 32상태 지지 17점. f(a,b)=a−(1/3)a(a−1)+(1/6)b(b−1)−(1/6)ab. Q(p,q)=−(2/3)p²−pq+q²+2p. HiGHS 차이 ≤ 4.4e−16. 두 모멘트 상한 107/125.
