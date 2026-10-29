@@ -171,3 +171,11 @@
   - 2·4·8·16초 간격 재시도와 작업 프로세스 재시작 뒤 재시도에서 모두 같은 오류가 났다.
   - 같은 시점의 브랜치 push(`main`)는 정상이었고 저장소 push 권한 점검도 정상이었다. 그래서 이 세션의 git 프록시가 태그 push를 받지 않는 것으로 판단했다(원인 미확정).
 - 조치: 로컬 태그를 삭제했다. 제출 기준은 `main`의 최신 커밋으로 하고, 태그는 필요하면 사람이 GitHub에서 만든다.
+
+### J18. 따름정리 C(claims C9) 정정 (2026-10-29)
+- 계기: 사람이 (p,q)=(1/7,4/7)에서 M=24/49, 순서 기반 BP(강화판)=24/49, SSS(강화판)=73/147, Chebyshev(강화판)=48/97을 제시하고 C9 재점검을 요구했다.
+- 재계산: 저장소 코드와 손계산(`notes/research_reassessment.md` §2)이 모두 네 값과 일치했다. 따라서 "SSS·Chebyshev도 BP형과 같은 집합에서 tight"라는 이전 서술은 틀렸다.
+- 원인: 원래 증명은 OBP의 tight 집합만 다뤘다. SSS·Chebyshev ≥ OBP에서는 포함 관계(⊆)만 나오는데 등호로 썼다.
+- 정정: BP형 R_V02 ∪ R_V16 ∪ R_V18 ∪ Z, SSS형 R_V02 ∪ R_V18 ∪ Z′, Chebyshev형 R_V18 ∪ Z″. 증명(ii)(iii)을 추가했다.
+- 테스트 추가(`tests/test_rn_bounds.py`): 네 값, 11개 목격점에서의 판정, SSS 다항식 항과 Chebyshev 유리함수 항이 Q_V02·Q_V16과 항등적으로 같지 않음(sympy).
+- 수정한 문서: `notes/proofs/theorem_AB.md`, `notes/claims.md`, `README.md`, `SUBMISSION.md`, `notes/literature.md`, `notes/presentation_content.md`.

@@ -78,20 +78,31 @@ def ordered_sss(p, q):
     return min(terms)
 
 
+def unordered_sss(p, q):
+    """Eq. (SSS) in section 1: the r = 0 terms of Theorem 3.1(a)."""
+    s1, s2 = partial_moments(sorted_marginals(p, q), 0)
+    return min(Fraction(1), s1 / K, s2 / comb(K, 2))
+
+
+def chebyshev_term(probs, r):
+    """CH(n - r, k - r) of Theorem 3.1(c) on the n - r smallest probabilities."""
+    s1, s2 = partial_moments(probs, r)
+    if K < s1 + r:
+        return Fraction(1)
+    var = s1 - (s1 * s1 - 2 * s2)
+    denom = var + (K - r - s1) ** 2
+    return var / denom if denom else Fraction(1)
+
+
 def ordered_chebyshev(p, q):
     """Theorem 3.1(c)."""
     probs = sorted_marginals(p, q)
-    best = Fraction(1)
-    for r in range(K):
-        s1, s2 = partial_moments(probs, r)
-        if K < s1 + r:
-            value = Fraction(1)
-        else:
-            var = s1 - (s1 * s1 - 2 * s2)
-            denom = var + (K - r - s1) ** 2
-            value = var / denom if denom else Fraction(1)
-        best = min(best, value)
-    return best
+    return min([Fraction(1)] + [chebyshev_term(probs, r) for r in range(K)])
+
+
+def unordered_chebyshev(p, q):
+    """Eq. (cheby) in section 1: the r = 0 term of Theorem 3.1(c)."""
+    return min(Fraction(1), chebyshev_term(sorted_marginals(p, q), 0))
 
 
 def union_term(p, q):

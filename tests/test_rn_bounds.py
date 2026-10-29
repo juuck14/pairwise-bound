@@ -72,6 +72,70 @@ def test_tight_exactly_on_sum_only_pieces_at_witnesses():
         assert tight == (a["id"] in {"V02", "V16", "V18"}), a["id"]
 
 
+def test_v16_witness_separates_the_three_bounds():
+    """Correction of the former claim C9: at the V16 witness the BP-type bounds are
+    tight but the SSS- and Chebyshev-type bounds are not (hand check in
+    notes/research_reassessment.md, section 2)."""
+    p, q = F(1, 7), F(4, 7)
+    m = exact_lp.envelope(p, q)
+    assert m == F(24, 49)
+    assert R.unordered_bp(p, q) == R.ordered_bp(p, q) == R.ordered_bp_tightened(p, q) == m
+    assert R.unordered_sss(p, q) == R.ordered_sss(p, q) == F(73, 147)
+    assert min(R.ordered_sss(p, q), R.union_term(p, q)) == F(73, 147)
+    assert R.unordered_chebyshev(p, q) == R.ordered_chebyshev(p, q) == F(48, 97)
+    assert min(R.ordered_chebyshev(p, q), R.union_term(p, q)) == F(48, 97)
+    # an isolated Chebyshev-tight point (R-N Prop. 4.3(a), n=5, alpha=2, k=3)
+    h = F(1, 2)
+    assert R.unordered_chebyshev(h, h) == R.ordered_chebyshev(h, h) == exact_lp.envelope(h, h) == F(5, 6)
+
+
+def test_sss_and_chebyshev_tightness_at_witnesses():
+    """SSS-type bounds are tight at the witnesses of V02 and V18 only; Chebyshev-type
+    bounds at the witness of V18 only (corrected Corollary C)."""
+    import json
+    from conftest import REPO
+    cert = json.loads((REPO / "results" / "regions" / "region_certificate.json").read_text())
+    for a in cert["active"]:
+        p, q = (F(x) for x in a["witness"])
+        m = exact_lp.envelope(p, q)
+        sss = [R.unordered_sss(p, q), R.ordered_sss(p, q), min(R.ordered_sss(p, q), R.union_term(p, q))]
+        cheb = [R.unordered_chebyshev(p, q), R.ordered_chebyshev(p, q),
+                min(R.ordered_chebyshev(p, q), R.union_term(p, q))]
+        for b in sss:
+            assert (b == m) == (a["id"] in {"V02", "V18"}), a["id"]
+        for b in cheb:
+            assert (b == m) == (a["id"] == "V18"), a["id"]
+
+
+def test_sss_and_chebyshev_never_coincide_with_v02_v16_formulas():
+    """Exact part of the corrected Corollary C: inside R_V16 the SSS-type bound and
+    inside R_V02 or R_V16 the Chebyshev-type bound can equal M only on a curve.
+    SSS terms are polynomials different from Q_V16; each Chebyshev term
+    var / (var + d^2) would have to satisfy var (1 - Q) = Q d^2 identically."""
+    import sympy as sp
+    P_, Q_ = sp.symbols("p q")
+
+    def qexpr(vid):
+        f = parametric.vertex_by_id(vid)["Q"]
+        return sum(sp.Rational(c.numerator, c.denominator) * P_**i * Q_**j for (i, j), c in f.items())
+
+    probs = [P_, P_, Q_, Q_, Q_]                     # ascending order for p <= q
+    s1 = [sum(probs[:5 - r]) for r in range(3)]
+    s2 = [sum(a * b for i, a in enumerate(probs[:5 - r]) for b in probs[i + 1:5 - r]) for r in range(3)]
+    sss_terms = [sp.Integer(1)] + [s1[r] / (3 - r) for r in range(3)] + [s2[r] / sp.binomial(3 - r, 2)
+                                                                       for r in range(2)]
+    union = (2 * P_ + Q_) - Q_ * 2 * P_
+    for t in sss_terms + [union]:
+        assert sp.expand(t - qexpr("V16")) != 0
+    for vid in ("V02", "V16"):
+        Qv = qexpr(vid)
+        assert sp.expand(union - Qv) != 0 and sp.expand(1 - Qv) != 0
+        for r in range(3):
+            var = s1[r] - (s1[r] ** 2 - 2 * s2[r])
+            d = 3 - r - s1[r]
+            assert sp.expand(var * (1 - Qv) - Qv * d**2) != 0, (vid, r)
+
+
 def test_non_vertex_two_moment_dual_is_convex_combination_of_v10_v11():
     y10 = parametric.vertex_by_id("V10")["y"]
     y11 = parametric.vertex_by_id("V11")["y"]

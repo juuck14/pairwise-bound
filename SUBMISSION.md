@@ -86,7 +86,7 @@ python -m scripts.demo --p 1/5 --q 1/2
 | M(2/5,3/5) = 61/75 | 독립 검증기 PASS |
 | 32상태 문제 ⇔ 12상태 (A,B) 문제 (그룹 내부 순열 평균화) | 증명 |
 | 0≤p≤q≤1에서 M(p,q)는 11개 조각으로 나뉜 조각별 이차식이다. 조각마다 공식, 영역(이차 부등식), 달성분포(다항식)를 구했다 | 컴퓨터 보조 증명, 독립 검증기 54/54 PASS |
-| 기존 상한(Ramachandra–Natarajan)은 11개 중 3개 조각에서만 정확하다 | 컴퓨터 보조 증명 |
+| 기존 상한(Ramachandra–Natarajan) 중 가장 강한 BP형은 11개 중 3개 조각(V02, V16, V18)에서만 정확하다. SSS형은 2개(V02, V18), Chebyshev형은 1개(V18) 조각에서만 정확하다 (2026-10-29 정정, `notes/claims.md` C9) | 컴퓨터 보조 증명 |
 | p와 q를 바꾸면 값이 달라진다: M(3/5,2/5) = 19/25 | 정확 계산 |
 
 자세한 내용과 근거 파일은 [`README.md`](README.md), [`notes/claims.md`](notes/claims.md), [`notes/proofs/theorem_AB.md`](notes/proofs/theorem_AB.md), [`results/regions/REGIONS.md`](results/regions/REGIONS.md)에 있다.
