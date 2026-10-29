@@ -41,6 +41,7 @@
 | C21 | (보조정리 L1) n ≥ 4에서 세 층 합집합의 모멘트 아핀 껍질이 전체가 아님 ⇔ K = {0,s,n}(2≤s≤n−2) 또는 K ⊆ {0,1,n−1,n}. (정리 L) 동일 주변확률 근방에서 BP의 정확성은 비예외 지지에서 열린 집합으로 안정적이고, 예외 지지(특히 R–N 경우 (b) {0,k,n})에서는 진부분 대수집합으로 제한된다 | **증명됨** (L1은 Gottlieb–Kantor–Wilson 포함행렬 rank 정리 인용, n ≤ 8 정확 계산과 일치) | exactness §5, `::test_layer_kernel_classification` |
 | C22 | R–N Example 3.2(n=12)의 비순서·순서 기반 BP 24칸의 정확/비정확이 E1–E5로 모두 설명된다 | **정확 계산 검증** (정확한 법칙 또는 정확한 조건 위반. 생성 코드 안의 정확 검사이며 독립 검증기는 아님) | exactness §7.1, `results/exactness/rn_example_3_2.md`, `::test_rn_example_3_2_verdicts` |
 | C23 | 2+3 문제의 따름정리 C(i): V02(정리 S), V16(E2+법칙), V18(C2)에서 정확. V10·V11·V12·V14·V21은 E3(p+2q≠2), V15는 E4, V19·V20은 E2로 비정확 | **정확 계산 검증** | exactness §7.2, `::test_two_three_pieces_explained_by_criteria`, `::test_rigidity_line_in_the_two_three_family` |
+| C25 | (명제 G) {0,k,n}이 BP 최적 기저이면 BP − P̄ ≥ max_j |Δ_j|/κ(n,k), Δ_j = p_j(S₁−p_j−k+1) − (2S₂−(k−1)S₁)/n. 동일 주변확률 근방에서 경우 (b)의 오차는 섭동 크기에 대해 1차로 커진다((n−2)p̄ ≠ k−1일 때) | **증명됨** (하한의 정밀도 비교는 탐색) | exactness §3, `::test_proposition_g_gap_lower_bound` |
 | C24 | (탐색) Example 3.2에서 모든 2-분할 집계 상한의 최솟값은 k=5에서 0.99623, k=6에서 0.90178로 R–N 순서 기반 상한(1, 0.92538)보다 작다 | 탐색 | research_reassessment §7, journal J19 |
 
 ## 실패 접근

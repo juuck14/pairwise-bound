@@ -4,7 +4,7 @@
 
 Float HiGHS and random instances with fixed seeds: these are explorations, not proofs.
 Names: certainty-random, certainty-boundary, certainty-minimal, regimes, split,
-positivstellensatz, productform, scaled, twovalued, twovalued-reduced, k2, decomp, kernels.
+positivstellensatz, productform, scaled, twovalued, twovalued-reduced, gap, k2, decomp, kernels.
 """
 import itertools
 import math
@@ -325,6 +325,35 @@ def twovalued_reduced():
     print("twovalued-reduced: (W) and (N) jointly feasible ->", dict(cnt))
 
 
+def gap():
+    """Proposition G: lower bounds on BP - P in the {0,k,n} regime (crude and best linear
+    combination of the F_j) against the true gap (HiGHS)."""
+    from fractions import Fraction as Fr
+    import random
+
+    def bounds(p, k):
+        n = len(p)
+        s1, s2 = (float(x) for x in G.moments(p))
+        sig = lambda s: s * (n + k - s) / (k * n) - (1.0 if s >= k else 0.0)
+        delta = [float(d) for d in G.rigidity_defects(p, k)]
+        states = [x for x in itertools.product((0, 1), repeat=n) if sum(x) not in (0, k, n)]
+        Fm = np.array([[x[j] * (sum(x) - k) - sum(x) * (sum(x) - k) / n for j in range(n)] for x in states])
+        sg = np.array([sig(sum(x)) for x in states])
+        r = linprog(-np.array(delta), A_ub=np.vstack([Fm, -Fm]), b_ub=np.concatenate([sg, sg]),
+                    bounds=[(None, None)] * n, method="highs")
+        true = float(G.bp_value(p, k)) - G.float_tight(p, k)[0]
+        return true, -r.fun, float(G.rigidity_gap_lower_bound(p, k))
+
+    for pp, qq in ((Fr(3, 5), Fr(4, 5)), (Fr(1, 2), Fr(5, 8)), (Fr(2, 5), Fr(3, 5)), (Fr(2, 7), Fr(5, 7))):
+        print("gap: (p,q)=(%s,%s) true %.5f  best-linear %.5f  prop-G %.5f" % ((pp, qq) + bounds([pp] * 2 + [qq] * 3, 3)))
+    rng = random.Random(3)
+    for _ in range(6):
+        p = [Fr(rng.randint(40, 75), 100) for _ in range(6)]
+        if [sorted(l) for l in G.bp_optimum(6, 3, *G.moments(p))[1]] != [[0, 3, 6]]:
+            continue
+        print("gap: n=6 p=%s true %.5f  best-linear %.5f  prop-G %.5f" % (([str(x) for x in p],) + bounds(p, 3)))
+
+
 # ------------------------------------------------------------------ misc
 
 def k2():
@@ -375,7 +404,7 @@ def kernels():
 RUNS = {"certainty-random": certainty_random, "certainty-boundary": certainty_boundary,
         "certainty-minimal": certainty_minimal, "regimes": regimes, "split": split,
         "positivstellensatz": positivstellensatz, "productform": productform, "scaled": scaled,
-        "twovalued": twovalued, "twovalued-reduced": twovalued_reduced, "k2": k2, "decomp": decomp, "kernels": kernels}
+        "twovalued": twovalued, "twovalued-reduced": twovalued_reduced, "gap": gap, "k2": k2, "decomp": decomp, "kernels": kernels}
 
 if __name__ == "__main__":
     names = sys.argv[1:] or ["all"]

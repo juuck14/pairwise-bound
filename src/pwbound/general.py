@@ -236,6 +236,32 @@ def layered_law_status(p, layers):
     return "none" if min(sol.values()) < 0 else "exists"
 
 
+def rigidity_defects(p, k):
+    """Delta_j = p_j (S1 - p_j - k + 1) - (2 S2 - (k-1) S1) / n (all zero iff the E3 condition holds)."""
+    p = as_fractions(p)
+    n = len(p)
+    s1, s2 = moments(p)
+    mean = (2 * s2 - (k - 1) * s1) / n
+    return [x * (s1 - x - k + 1) - mean for x in p]
+
+
+def rigidity_constant(n, k):
+    """kappa(n,k) of Proposition G: max over s not in {0,k,n} of |s-k| max(s, n-s)/n / sigma(s),
+    sigma(s) = s(n+k-s)/(kn) - 1[s >= k] (slack of the {0,k,n} dual)."""
+    best = Fraction(0)
+    for s in range(1, n):
+        if s == k:
+            continue
+        sigma = Fraction(s * (n + k - s), k * n) - (1 if s >= k else 0)
+        best = max(best, Fraction(abs(s - k) * max(s, n - s), n) / sigma)
+    return best
+
+
+def rigidity_gap_lower_bound(p, k):
+    """Proposition G: if {0,k,n} is an optimal BP basis then BP - P >= max_j |Delta_j| / kappa(n,k)."""
+    return max(abs(d) for d in rigidity_defects(p, k)) / rigidity_constant(len(p), k)
+
+
 def bp_exactness_verdict(p, k):
     """Necessary-condition test for P(n,k,p) = BP (notes/proofs/exactness.md).
 

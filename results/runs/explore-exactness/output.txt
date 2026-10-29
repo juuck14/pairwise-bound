@@ -40,3 +40,11 @@ real	1m36.354s
 user	1m29.761s
 sys	0m1.142s
 twovalued-reduced: (W) and (N) jointly feasible -> {True: 5182}
+gap: (p,q)=(3/5,4/5) true 0.00533  best-linear 0.00533  prop-G 0.00200
+gap: (p,q)=(1/2,5/8) true 0.00625  best-linear 0.00417  prop-G 0.00156
+gap: (p,q)=(2/5,3/5) true 0.04267  best-linear 0.01067  prop-G 0.00400
+gap: (p,q)=(2/7,5/7) true 0.07891  best-linear 0.01633  prop-G 0.00612
+gap: n=6 p=['11/20', '37/50', '12/25', '63/100', '7/10', '11/25'] true 0.01452  best-linear 0.01200  prop-G 0.00430
+gap: n=6 p=['2/5', '7/10', '14/25', '3/4', '27/50', '13/25'] true 0.01262  best-linear 0.00913  prop-G 0.00494
+gap: n=6 p=['27/50', '49/100', '73/100', '16/25', '2/5', '11/25'] true 0.00634  best-linear 0.00438  prop-G 0.00193
+gap: n=6 p=['1/2', '21/50', '59/100', '41/100', '57/100', '7/10'] true 0.00474  best-linear 0.00368  prop-G 0.00133

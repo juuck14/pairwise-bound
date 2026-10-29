@@ -194,6 +194,29 @@ def test_local_robustness_near_identical_marginals_float(n, k, pbar):
         assert abs(G.float_tight(p, k)[0] - bp_f) < 1e-8
 
 
+def test_proposition_g_gap_lower_bound():
+    """Proposition G: in the {0,k,n} regime, BP - P >= max_j |Delta_j| / kappa(n,k).
+    Exact on the 2+3 pieces whose witnesses are in that regime; kappa(5,3) = 12."""
+    assert G.rigidity_constant(5, 3) == 12
+    from conftest import REPO
+    cert_ = json.loads((REPO / "results" / "regions" / "region_certificate.json").read_text())
+    checked = 0
+    for a in cert_["active"]:
+        p, q = (F(x) for x in a["witness"])
+        marg = [p, p, q, q, q]
+        bp, laws = G.bp_optimum(5, 3, *G.moments(marg))
+        if [sorted(l) for l in laws] != [[0, 3, 5]]:
+            continue
+        gap = bp - exact_lp.envelope(p, q)
+        assert gap >= G.rigidity_gap_lower_bound(marg, 3) > 0 or (gap > 0 and a["id"] == "V15")
+        checked += 1
+    assert checked == 6
+    # representative point: gap 107/125 - 61/75 = 16/375, bound (6/125)/12 = 1/250
+    marg = [F(2, 5)] * 2 + [F(3, 5)] * 3
+    assert G.rigidity_defects(marg, 3) == [F(6, 125)] * 2 + [F(-4, 125)] * 3
+    assert G.rigidity_gap_lower_bound(marg, 3) == F(1, 250)
+
+
 def random_rational(rng, lo=1, hi=99, den=100):
     return F(rng.randint(lo, hi), den)
 
