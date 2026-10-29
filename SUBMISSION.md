@@ -89,6 +89,8 @@ python -m scripts.demo --p 1/5 --q 1/2
 | 기존 상한(Ramachandra–Natarajan) 중 가장 강한 BP형은 11개 중 3개 조각(V02, V16, V18)에서만 정확하다. SSS형은 2개(V02, V18), Chebyshev형은 1개(V18) 조각에서만 정확하다 (2026-10-29 정정, `notes/claims.md` C9) | 컴퓨터 보조 증명 |
 | p와 q를 바꾸면 값이 달라진다: M(3/5,2/5) = 19/25 | 정확 계산 |
 
+> 2026-10-29 연구 방향 재평가: 위 결과는 표준 도구로 한 사례를 정확히 푼 것이라는 평가에 따라, 연구 질문을 "두 모멘트 상한이 서로 다른 주변확률에서 언제 정확한가(일반 n, k)"로 바꿨다. 데모 자체는 그대로 유효하다. 새 결과는 [`notes/research_reassessment.md`](notes/research_reassessment.md)와 [`notes/proofs/exactness.md`](notes/proofs/exactness.md)에 있다.
+
 자세한 내용과 근거 파일은 [`README.md`](README.md), [`notes/claims.md`](notes/claims.md), [`notes/proofs/theorem_AB.md`](notes/proofs/theorem_AB.md), [`results/regions/REGIONS.md`](results/regions/REGIONS.md)에 있다.
 
 ## 알려진 한계

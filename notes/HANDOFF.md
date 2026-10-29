@@ -6,7 +6,7 @@ _매 세션 종료 시 갱신한다. 첫 줄의 "다음 행동"이 바로 할 �
 쌍별 독립 Bernoulli 변수에서 두 모멘트(Boros–Prékopa, BP) 상한과 R–N 순서 기반 상한이 **언제 정확하고 왜 깨지는가**를 일반 n, k에서 밝힌다.
 - 배경·후보 비교·선택 이유: `notes/research_reassessment.md`
 - 증명: `notes/proofs/exactness.md`
-- 주장 상태: `notes/claims.md` C15–C24
+- 주장 상태: `notes/claims.md` C15–C25
 - 원래 2+3 문제의 결과(C1–C14)는 이 질문의 사례이자 검증 자료로 보존한다.
 
 ## 다음 행동

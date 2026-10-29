@@ -1,6 +1,6 @@
 # 쌍별 독립에서 두 모멘트 상한(BP)은 언제 정확한가 — 일반 n, k
 
-상태 표기는 `notes/claims.md`와 같다. 이 문서의 주장 ID(E, C, S, L 계열)는 claims의 C15–C24에 대응한다.
+상태 표기는 `notes/claims.md`와 같다. 이 문서의 주장 ID(E, C, S, L 계열)는 claims의 C15–C25에 대응한다.
 
 ## 0. 설정과 표기
 

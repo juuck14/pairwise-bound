@@ -54,7 +54,7 @@ VERDICT: PASS
 
 > **쌍별 독립에서 두 모멘트(Boros–Prékopa) 상한은 서로 다른 주변확률일 때 언제 정확하고, 왜 깨지는가?** (일반 n, k)
 
-지금까지 확보한 결과(증명: [`notes/proofs/exactness.md`](notes/proofs/exactness.md), 상태: claims C15–C24):
+지금까지 확보한 결과(증명: [`notes/proofs/exactness.md`](notes/proofs/exactness.md), 상태: claims C15–C25):
 - **확실성 판정:** P̄ = 1이면 모든 j에서 Σ_{l≠j} p_l ≥ k다(일반 증명). 역은 k ∈ {1, n−2, n−1, n}에서 증명했고, 일반 경우는 추측이다.
 - **정확성의 장애:** 조건부 평균 E[S∣X_j] = 1 + Σ_{l≠j}p_l 또는 Σ_{l≠j}p_l에서 세 가지 장애가 나온다.
   - BP-최적 층과의 구간 불일치
@@ -63,6 +63,7 @@ VERDICT: PASS
 
   이것들이 충분하지 않음을 보이는 정확한 반례도 있다.
 - **SSS 이차항의 필요충분조건:** P̄ = S₂/C(k,2)일 필요충분조건을 구했다. 동일 주변확률이면 R–N Prop. 4.3(b)와 같다. 따름: P̄(n,2,p) = S₂ ⇔ max_j Σ_{l≠j}p_l ≤ 1.
+- **오차의 정량화:** 경우 (b)에서 BP − P̄ ≥ max_j|Δ_j|/κ(n,k)(Δ_j는 경직성 결함). 동일 주변확률 근방에서 오차가 섭동 크기에 1차로 커진다.
 - **국소 이분법:** 동일 주변확률 근방에서 BP의 정확성은 R–N Theorem 4.1의 경우 (a)(c)에서는 열린 집합으로 유지되고, 경우 (b)에서는 대수적 부분집합으로 줄어든다. 근거는 층 합집합의 모멘트 차원 분류다.
 - **설명:** R–N Example 3.2(n=12)에서 BP와 순서 기반 BP가 정확한 칸과 아닌 칸 24개를 모두 정확한 증서와 함께 설명했다([`results/exactness/rn_example_3_2.md`](results/exactness/rn_example_3_2.md)). 원래 2+3 문제에서 BP가 정확한 조각(V02, V16, V18)과 아닌 조각의 원인도 같은 원리로 설명했다.
 
