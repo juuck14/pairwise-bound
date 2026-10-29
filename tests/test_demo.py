@@ -23,7 +23,7 @@ def test_saved_demo_output_is_current(tmp_path, capsys):
         return [line for line in text.splitlines()
                 if "HiGHS" not in line and "certificate:" not in line]
 
-    assert demo.main([]) == 0
+    assert demo.main(["--out", str(tmp_path)]) == 0
     current = capsys.readouterr().out
     saved = (REPO / "results" / "demo_output.txt").read_text(encoding="utf-8")
     assert stable(current) == stable(saved)
