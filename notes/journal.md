@@ -164,3 +164,10 @@
   - 따름정리 C 요약에서 "내부가 없는 예외 집합 제외" 단서가 빠져 있었음.
   - `SUBMISSION.md`의 검사 28개 내역 산수 오류.
 - 명령: `pytest` → 1000 passed. Python 3.11.17 (25.2초), 3.12.3 (21.5초), 3.13.17 (18.2초).
+
+### J17. 제출 태그 시도 (2026-10-29)
+- 명령: `git tag -a demo-v1` → `git push origin demo-v1`
+- 실패: `send-pack: unexpected disconnect while reading sideband packet`.
+  - 2·4·8·16초 간격 재시도와 작업 프로세스 재시작 뒤 재시도에서 모두 같은 오류가 났다.
+  - 같은 시점의 브랜치 push(`main`)는 정상이었고 저장소 push 권한 점검도 정상이었다. 그래서 이 세션의 git 프록시가 태그 push를 받지 않는 것으로 판단했다(원인 미확정).
+- 조치: 로컬 태그를 삭제했다. 제출 기준은 `main`의 최신 커밋으로 하고, 태그는 필요하면 사람이 GitHub에서 만든다.
