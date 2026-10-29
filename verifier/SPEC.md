@@ -3,7 +3,7 @@
 이 문서는 `verifier/verify.py`보다 먼저 작성되었고, 검증기는 이 문서만을 근거로 구현한다.
 검증기는 최적화 코드(`src/pwbound`)를 import하지 않으며, Python 표준 라이브러리만 쓴다.
 
-> 상태: AI 작성 초안. **사람 검토 전** (검토 후 이 줄을 검토자·날짜로 바꾼다).
+> 상태: AI 작성, **사람 검토 완료** (저장소 소유자, 2026-10-29).
 
 ## 1. 무엇을 증명하는가
 
@@ -137,7 +137,7 @@ python -I verifier/verify.py <certificate.json> [--json] [--allow-outside-scope]
 
 ## 8. region 모드 (형식 `pw5-region/v1`)
 
-> 상태: AI 작성 초안. **사람 검토 전.** 검증기는 `format` 값으로 point/region 모드를 고른다.
+> 상태: AI 작성, **사람 검토 완료** (저장소 소유자, 2026-10-29). 검증기는 `format` 값으로 point/region 모드를 고른다.
 
 ### 8.1 무엇을 증명하는가
 
