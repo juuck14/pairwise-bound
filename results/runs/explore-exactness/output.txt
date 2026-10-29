@@ -1,0 +1,41 @@
+certainty-random: tested 2250, mismatches 0
+certainty-boundary: {'inside_ok': 1425, 'outside_ok': 655, 'outside_within_tolerance': 155}
+certainty-minimal: {'minimal_feasible': 215, 'outside_infeasible': 215}
+regimes: ('E1', False) 51
+regimes: ('E2', False) 235
+regimes: ('E3', False) 537
+regimes: ('E4', False) 290
+regimes: ('open', False) 80
+regimes: ('open', True) 1207
+split: (4, 'split-fails', 'not exact') 66
+split: (4, 'split-ok', 'exact') 188
+split: (5, 'split-fails', 'not exact') 306
+split: (5, 'split-ok', 'exact') 151
+split: (5, 'split-ok', 'not exact') 13
+split: (6, 'split-fails', 'not exact') 329
+split: (6, 'split-ok', 'exact') 236
+split: (6, 'split-ok', 'not exact') 15
+positivstellensatz: n=5 k=2 points satisfying the inequalities 495, not representable 86
+positivstellensatz: n=5 k=3 points satisfying the inequalities 0, not representable 0
+positivstellensatz: n=6 k=2 points satisfying the inequalities 2162, not representable 168
+positivstellensatz: n=6 k=3 points satisfying the inequalities 12, not representable 5
+positivstellensatz: n=6 k=4 points satisfying the inequalities 0, not representable 0
+productform: feasible -> {False: 236}
+scaled: (conditions hold, certain law exists) -> {'not realisable': 1306, (False, False): 411, (True, True): 83}
+twovalued: construction works -> {True: 4687, False: 580}
+k2: (n, max-formula ok, sum-formula ok) (3, np.True_, np.False_) 24
+k2: (n, max-formula ok, sum-formula ok) (3, True, True) 160
+k2: (n, max-formula ok, sum-formula ok) (4, np.False_, np.False_) 39
+k2: (n, max-formula ok, sum-formula ok) (4, np.True_, np.False_) 5
+k2: (n, max-formula ok, sum-formula ok) (4, True, True) 54
+k2: (n, max-formula ok, sum-formula ok) (5, np.False_, np.False_) 28
+k2: (n, max-formula ok, sum-formula ok) (5, np.True_, np.False_) 1
+k2: (n, max-formula ok, sum-formula ok) (5, True, True) 25
+k2: (n, max-formula ok, sum-formula ok) (6, np.False_, np.False_) 21
+k2: (n, max-formula ok, sum-formula ok) (6, True, True) 8
+decomp: (capacity ok, decomposable) -> {(True, True): 738, (False, False): 591, (True, False): 111}
+kernels n=8: not full -> {(0, 1, 7): 20, (0, 1, 8): 27, (0, 2, 8): 7, (0, 3, 8): 7, (0, 4, 8): 7, (0, 5, 8): 7, (0, 6, 8): 7, (0, 7, 8): 27, (1, 7, 8): 20}
+
+real	1m36.354s
+user	1m29.761s
+sys	0m1.142s

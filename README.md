@@ -48,7 +48,30 @@ E f(A, B) = Q(p, q) = -(2/3)p^2 - pq + q^2 + 2p = 61/75
 VERDICT: PASS
 ```
 
-## 현재까지의 결과
+## 연구 방향 재평가 (2026-10-29)
+
+11/1까지의 결과(아래)는 표준 도구(LP 쌍대, 대칭화, 매개변수 LP)로 한 사례를 정확히 푼 것이다. 독립 재평가에서 "사례 계산에 그친다"는 우려가 타당하다고 판단했다([`notes/research_reassessment.md`](notes/research_reassessment.md)). 그래서 질문을 다음으로 바꿨다.
+
+> **쌍별 독립에서 두 모멘트(Boros–Prékopa) 상한은 서로 다른 주변확률일 때 언제 정확하고, 왜 깨지는가?** (일반 n, k)
+
+지금까지 확보한 결과(증명: [`notes/proofs/exactness.md`](notes/proofs/exactness.md), 상태: claims C15–C24):
+- **확실성 판정:** P̄ = 1이면 모든 j에서 Σ_{l≠j} p_l ≥ k다(일반 증명). 역은 k ∈ {1, n−2, n−1, n}에서 증명했고, 일반 경우는 추측이다.
+- **정확성의 장애:** 조건부 평균 E[S∣X_j] = 1 + Σ_{l≠j}p_l 또는 Σ_{l≠j}p_l에서 세 가지 장애가 나온다.
+  - BP-최적 층과의 구간 불일치
+  - 지지 {0,k,n}에서의 두 근 경직성
+  - 층 측도의 음수
+
+  이것들이 충분하지 않음을 보이는 정확한 반례도 있다.
+- **SSS 이차항의 필요충분조건:** P̄ = S₂/C(k,2)일 필요충분조건을 구했다. 동일 주변확률이면 R–N Prop. 4.3(b)와 같다. 따름: P̄(n,2,p) = S₂ ⇔ max_j Σ_{l≠j}p_l ≤ 1.
+- **국소 이분법:** 동일 주변확률 근방에서 BP의 정확성은 R–N Theorem 4.1의 경우 (a)(c)에서는 열린 집합으로 유지되고, 경우 (b)에서는 대수적 부분집합으로 줄어든다. 근거는 층 합집합의 모멘트 차원 분류다.
+- **설명:** R–N Example 3.2(n=12)에서 BP와 순서 기반 BP가 정확한 칸과 아닌 칸 24개를 모두 정확한 증서와 함께 설명했다([`results/exactness/rn_example_3_2.md`](results/exactness/rn_example_3_2.md)). 원래 2+3 문제에서 BP가 정확한 조각(V02, V16, V18)과 아닌 조각의 원인도 같은 원리로 설명했다.
+
+```bash
+python -m scripts.explain_rn_example        # R–N Example 3.2의 24칸 판정 (약 8초)
+python -m scripts.explore_exactness all     # 탐색 실행 (부동소수점, 약 100초)
+```
+
+## 현재까지의 결과 (원래 2+3 문제)
 
 상태 정의와 근거는 [`notes/claims.md`](notes/claims.md)에 있다.
 
@@ -88,17 +111,20 @@ python -m scripts.plot_regions      # 그림 (예시용)
 | `src/pwbound/cert.py` | 점 증서 JSON 생성 |
 | `src/pwbound/parametric.py`, `region_cert.py`, `poly.py`, `trimin.py` | 매개변수 LP: tight 집합, 원뿔 facet, 목격점, 지배 덮개, 영역 증서 |
 | `src/pwbound/rn_bounds.py` | Ramachandra–Natarajan 상한 구현과 쌍대점 집합 |
+| `src/pwbound/general.py` | 일반 n의 주변확률: BP 최적 법칙, 정확성 필요조건 판정, 층 차원, 정확한 법칙 검사·재구성, HiGHS 탐색 |
 | `verifier/SPEC.md`, `verifier/verify.py` | 독립 검증기 명세와 구현 (표준 라이브러리만) |
 | `scripts/demo.py` | 한 명령 데모 |
 | `scripts/make_certificate.py` | 임의 (p,q)의 증서 생성 |
 | `scripts/classify.py`, `scripts/plot_regions.py`, `scripts/plot_slice.py`, `scripts/scan.py`, `scripts/junctions.py` | 조각 분류·영역도·단면 비교 그림·격자 탐색·교점표 |
-| `results/certificates/`, `results/regions/` | 점 증서, 영역 증서·문서·그림 |
+| `scripts/explain_rn_example.py`, `scripts/explore_exactness.py` | R–N Example 3.2 설명(정확 증서), 정확성 탐색 실행 |
+| `results/certificates/`, `results/regions/`, `results/exactness/` | 점 증서, 영역 증서·문서·그림, Example 3.2 판정표 |
 | `tests/` | 모형, 정확 해법, 교차확인, 검증기 음성 테스트, 검증기 독립성 |
 | `notes/` | 계획, 문제 정의, 증명, 주장 상태, 문헌, 연구일지, AI 상호작용 기록, 인계 문서 |
 
 ## 문서
 
-- 계획: [`notes/PLAN.md`](notes/PLAN.md)
+- 연구 재평가와 새 질문: [`notes/research_reassessment.md`](notes/research_reassessment.md)
+- 계획(11/1까지): [`notes/PLAN.md`](notes/PLAN.md)
 - 문제와 가정: [`notes/problem.md`](notes/problem.md)
 - 증명: [`notes/proofs/`](notes/proofs/)
 - 주장 상태: [`notes/claims.md`](notes/claims.md)

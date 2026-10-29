@@ -2,52 +2,67 @@
 
 _매 세션 종료 시 갱신한다. 첫 줄의 "다음 행동"이 바로 할 일이다._
 
+## 현재 연구 목표 (2026-10-29부터)
+쌍별 독립 Bernoulli 변수에서 두 모멘트(Boros–Prékopa, BP) 상한과 R–N 순서 기반 상한이 **언제 정확하고 왜 깨지는가**를 일반 n, k에서 밝힌다.
+- 배경·후보 비교·선택 이유: `notes/research_reassessment.md`
+- 증명: `notes/proofs/exactness.md`
+- 주장 상태: `notes/claims.md` C15–C24
+- 원래 2+3 문제의 결과(C1–C14)는 이 질문의 사례이자 검증 자료로 보존한다.
+
 ## 다음 행동
-1. **(사람)** 발표 내용 초안 `notes/presentation_content.md`를 검토하고, 슬라이드 제작 여부와 방향을 결정한다.
-   - 11/1 데모 제출물은 준비 완료(`SUBMISSION.md`). 제출 기준은 `main`의 최신 커밋이다.
-   - 태그가 필요하면 사람이 GitHub에서 만든다. 이 세션에서는 태그 push가 git 프록시에서 끊겼다(J17).
-2. 완료: `verifier/SPEC.md` 사람 검토(2026-10-29). 모델/버전 칸은 사람 결정으로 제거.
-3. 발표 자료 자체는 사람이 내용 문서를 검토한 뒤에 만든다.
-4. (선택 확장) 교점 목록이 빠짐없는지 엄밀화(C11은 좌표·최소 달성만 정확). 따름정리 C의 Z 집합 정확 기술. p>q 영역 분류.
-5. (선택 확장) R–N을 인용한 2023–2026 후속 문헌 확인(신규성 판단 보강). SIAM 출판본 번호 대조(네트워크 허용 필요).
+1. **추측 C(확실성 판정의 일반 충분성) 증명 시도.**
+   - 1순위: "주변 t·p, 쌍 s·p_ip_j" 2-모수 족으로 일반화해 최대 좌표 조건화 귀납을 닫는다.
+     - 근거: `python -m scripts.explore_exactness scaled`에서 c·p_ip_j 족은 조건부 평균 조건과 존재가 494/494 일치했다.
+     - 막히는 곳: 그 족 자체의 상관 polytope 실현 가능성 조건. c ≥ 1 쪽은 R–N Lemma 2.1이 덮는다. c < 1 쪽 조건을 먼저 찾는다.
+   - 2순위: 두 값 주변확률(α개 a, β개 b)만이라도 (A,B) 2차원 모멘트 문제로 증명한다. 경계에서 지지가 {A+B=k, B<β} ∪ {B=β}로 강제된다(exactness §2 메모, J19). 남은 자유도는 B의 법칙 w와 B=β 위의 A 법칙뿐이다.
+2. 경우 (c)(지지 {i−1,i,k}, i ≥ 2)의 장애 분류: E2, E2′ 다음 단계인 매칭형 장애(C19의 n=5 반례)를 일반화한다. `python -m scripts.explore_exactness split`의 "split-ok but not exact" 28건이 시험 사례다.
+3. 정리 S의 (II)(순위 1 가중 그래프의 분수 K_k-분해) 판정을 n=5, k=3(Petersen) 너머로 확장한다. `... decomp`의 용량-만족·분해-불가 111건이 시험 사례다.
+4. (사람) `notes/proofs/exactness.md` 검토. 특히 보조정리 L1의 인용(Gottlieb–Kantor–Wilson), 정리 L(b)의 엄밀 상보성 가정, 정리 S의 (III).
+5. (사람, 병행 가능) 발표 내용 `notes/presentation_content.md`는 이번 재평가로 중심 메시지가 바뀌었다. 슬라이드 방향은 사람이 정한다. 이것은 연구 진행을 막는 조건이 아니다.
+6. 문헌: 네트워크 허용이 바뀌면 Boros–Prékopa 1989, Prékopa–Gao 2005, Mádi-Nagy–Prékopa 2004, Qiu–Ahmed–Dey 2016 원문에서 "일반 사건의 SSS·BP sharpness 조건"을 확인한다(신규성 판단 보강, reassessment §3.3).
 
 ## 확인된 사실 (근거는 `claims.md`)
-- C1: M(2/5,3/5)=61/75. 독립 검증기 PASS. 이 점은 조각 V12 = 2p − 2p²/3 + q² − pq의 내부다.
-- C2: 32상태 ⇔ 12상태 축소(정리 R), 쌍대 대응(명제 D). 증명됨.
-- C3 (정리 A): [0,1]²에서 M = 21개 쌍대 꼭짓점 이차식의 최솟값. 컴퓨터 보조 증명.
-- C8 (정리 B): D 내부 활성 조각은 정확히 11개. 영역은 facet 부등식, 달성분포는 다항식. 영역 증서 54/54 PASS.
-- C9 (따름정리 C): R–N 두 모멘트·순서 기반 상한은 V02, V16, V18 조각(+ 내부 없는 집합)에서만 tight.
-- C4–C7, C10: 비대칭, p=q 단면(R–N Thm 4.1 재현), 경계 p=0과 q=1, 두 모멘트 상한 비tight, s-only 쌍대.
+- 원래 문제: C1–C14. M(2/5,3/5)=61/75, 정리 A·B(11개 조각), C12(M=1 영역; 이제 C16에서 증명됨).
+- C9 정정(2026-10-29): BP형 tight = V02 ∪ V16 ∪ V18 ∪ Z, SSS형 = V02 ∪ V18 ∪ Z′, Chebyshev형 = V18 ∪ Z″.
+- 새 결과 (일반 n, k):
+  - C15: 조건부 평균 항등식, 단조성
+  - C16: 확실성 필요조건과 k ∈ {1, n−2, n−1, n}에서의 충분성
+  - C18: 정확성의 필요조건 E2–E5
+  - C19: 그 불충분성의 정확한 반례
+  - C20: 정리 S(SSS 이차항 정확성의 필요충분조건, k=2 따름)
+  - C21: 층 차원 분류와 국소 이분법
+  - C22: R–N Example 3.2 24칸 설명
+  - C23: 2+3 조각의 원인 설명
+- C17: 추측 C (미증명)
 
 ## 미해결 질문
-- 교점 목록이 빠짐없다는 엄밀한 증명 (C11: 좌표와 최소 달성은 정확, 목록 완전성과 인접은 수치 판정)
-- 따름정리 C의 내부 없는 예외 집합 Z가 정확히 어떤 곡선 조각인지
-- p>q 영역(연구 범위 밖)의 분류
-- 2+3 구조를 일반 (m,n) 그룹과 임계값 k로 확장했을 때의 구조
-- R–N 이후 문헌에 같은 결과가 있는지(신규성 최종 판단)
+- 추측 C의 일반 증명
+- 경우 (c)(i ≥ 2)의 전역 필요충분조건
+- (II)의 닫힌꼴 판정
+- 일반 p에서 P̄ 계산의 복잡도(R–N §5(a))
+- 원래 문제의 잔여: 교점 목록 완전성(C11), 예외 집합 Z의 정확한 기술, p>q 분류
 
 ## 실패한 접근 / 수정 이력
-- 꼭짓점별 목격점 탐색이 반복 계산으로 2분 이상 걸림 → 한 번의 격자 순회로 8초 (J10).
-- 그림 라벨이 배열 테두리에 붙음 → 거리 변환에 여백을 덧대 해결 (J10).
-- R–N BP 닫힌꼴이 (p,q)=(0,1)에서 0/0 → 같은 상한을 정의하는 모멘트 LP 값으로 대체 (J11).
-- 계획 단계 짐작("퇴화 꼭짓점은 M=1 조각")이 틀림. 실제 퇴화는 V06, V16 (J10).
+- 추측 C의 증명 경로 5개 실패 또는 미완(`claims.md` 실패 접근 표, reassessment §6)
+- C9 오류: 포함 관계를 등호로 씀 → 정정(J18)
+- V15 목격점을 E3로 예상했으나 p+2q=2 위에 있어 E4 → 테스트 기대값 수정(J19)
+- 이전 이력: 목격점 탐색 속도(J10), 그림 라벨(J10), R–N 닫힌꼴 0/0(J11), 퇴화 꼭짓점 짐작(J10)
 
 ## 재현 명령
 ```bash
 python3 -m venv .venv && . .venv/bin/activate
-pip install -e '.[dev,symbolic,plot]'
-python -m scripts.demo                                   # 대표 사례
-python -m scripts.classify                               # 영역 증서 + REGIONS.md + 검증
+pip install -r requirements.txt                          # 또는 pip install -e '.[dev,symbolic,plot]'
+python -m scripts.demo                                   # 11/1 데모 (대표 사례)
+python -m scripts.classify                               # 2+3 영역 증서 + REGIONS.md + 검증
+python -m scripts.explain_rn_example                     # R–N Example 3.2 설명 (약 8초)
+python -m scripts.explore_exactness all                  # 탐색 실행 전체 (약 100초, 부동소수점)
 python -I verifier/verify.py results/certificates/p2_5-q3_5.json
 python -I verifier/verify.py results/regions/region_certificate.json
-python -m scripts.plot_regions                           # 영역도
-python -m scripts.junctions                              # 교점표 (약 3.5분)
-python -m scripts.plot_slice                             # q=3/5 단면 비교 그림
-pytest                                                   # 1000 tests
+pytest                                                   # 전체 테스트 (약 40초)
 ```
-- 무작위 테스트 seed: 20261028, 20261029, 7, 11, 13 (`tests/`에 고정)
+- 무작위 테스트 seed: 20261028, 20261029, 7, 11, 13 (`tests/`에 고정), 탐색 seed는 `scripts/explore_exactness.py`
 
 ## 환경 상태
 - 원격: `https://github.com/juuck14/pairwise-bound` (main에 push)
-- 네트워크: arxiv.org 허용. export.arxiv.org, SIAM, 저자 홈페이지, SSRN은 차단.
+- 네트워크: arxiv.org 허용. INFORMS·ScienceDirect·JSTOR·RUTCOR·Semantic Scholar·Crossref·OpenAlex·SIAM은 차단(403).
 - Python 3.13.17, numpy 2.5.4, scipy 1.18.1, sympy 1.14.0, matplotlib 3.11.2, pytest 9.2.0 (`requirements.lock`)

@@ -1,0 +1,19 @@
+{
+  "command": "python -m scripts.explore_exactness all",
+  "inputs": "fixed seeds inside scripts/explore_exactness.py (1, 7, 99, 11, 5, 4, 12, 17, 2, 8, 41)",
+  "seed": "per run, see script",
+  "elapsed_seconds": 96.4,
+  "note": "float HiGHS exploration; not proofs. Output in output.txt (git commit = state before this run was committed).",
+  "environment": {
+    "python": "3.13.17",
+    "platform": "Linux-6.18.44-fc-v185-x86_64-with-glibc2.39",
+    "packages": {
+      "numpy": "2.5.4",
+      "scipy": "1.18.1",
+      "sympy": "1.14.0",
+      "matplotlib": "3.11.2",
+      "pytest": "9.2.0"
+    },
+    "git_commit": "230eff4f6a26aefbc1e03a07b74ba544982c1580+dirty"
+  }
+}

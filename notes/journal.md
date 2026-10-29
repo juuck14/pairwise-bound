@@ -179,3 +179,29 @@
 - 정정: BP형 R_V02 ∪ R_V16 ∪ R_V18 ∪ Z, SSS형 R_V02 ∪ R_V18 ∪ Z′, Chebyshev형 R_V18 ∪ Z″. 증명(ii)(iii)을 추가했다.
 - 테스트 추가(`tests/test_rn_bounds.py`): 네 값, 11개 목격점에서의 판정, SSS 다항식 항과 Chebyshev 유리함수 항이 Q_V02·Q_V16과 항등적으로 같지 않음(sympy).
 - 수정한 문서: `notes/proofs/theorem_AB.md`, `notes/claims.md`, `README.md`, `SUBMISSION.md`, `notes/literature.md`, `notes/presentation_content.md`.
+
+### J19. 연구 재평가와 새 질문: BP는 언제 정확한가 (2026-10-29)
+- 계기: 사람이 "기존 방법을 작은 사례에 적용한 전수계산에 그치는가"라는 우려의 독립 평가와 보완을 요청했다(`notes/research_reassessment.md`).
+- 문헌:
+  - R–N v6 소스(이전 세션 사본)에서 §1–5를 다시 읽었다. Example 3.2가 tight 사례를 수치로만 보고한다는 점, §5 열린 문제 두 개를 확인했다.
+  - arXiv 검색 7회(검색어는 reassessment §3.2), 초록 확인 7편, 2209.08563 소스 일부.
+  - 실패: INFORMS, ScienceDirect, JSTOR, RUTCOR, Semantic Scholar, Crossref, OpenAlex가 모두 `CONNECT tunnel failed, response 403`.
+- 탐색 스크립트는 처음에 임시 폴더에서 썼다. 문서에 인용한 것은 같은 시드로 `scripts/explore_exactness.py`에 옮겨 다시 돌렸다. 아래 수치는 옮긴 판의 출력이다(`results/runs/explore-exactness/output.txt`, 96초).
+  - certainty-random: 2,250점, 불일치 0
+  - certainty-boundary: 경계 안 1,425 일치, 바깥 655 일치, 바깥 155점은 값이 1 − O(1e-8)라 허용오차 안(이론상 < 1)
+  - certainty-minimal: 최소점 215 모두 실현 가능, 바로 바깥 215 모두 불가능(임시판에서는 195/195)
+  - regimes: "not exact" 판정 1,113건 모두 실제로 비정확. "open" 1,287건 중 1,207건 정확, 80건 비정확(E2–E4로 판정 못 함)
+  - split: n=4 254/254 일치. n=5,6 비정확 663건 중 28건이 모든 2-분할 조건 통과
+  - positivstellensatz: n=5,k=2 495점 중 86점, n=6,k=2 2,162점 중 168점, n=6,k=3 12점 중 5점이 부등식을 만족하지만 표현 불가
+  - productform: 경계점 236개 모두 실패
+  - scaled(쌍 = c·p_ip_j): 실현 가능한 494건에서 조건부 평균 조건과 확실성 법칙 존재가 모두 일치
+  - twovalued: 5,267건 중 580건(11%) 구성 실패
+  - k2: n=3에서 max 공식 184/184, n ≥ 4에서 단순 공식 둘 다 자주 틀림
+  - decomp: 용량 조건 만족 849건 중 111건이 분해 불가
+  - kernels n=8: 예외는 {0,s,8}(2≤s≤6)과 {0,1,7},{0,1,8},{0,7,8},{1,7,8}뿐
+- 정확한 결과(분수):
+  - `scripts/explain_rn_example.py` → `results/exactness/rn_example_3_2.md`: R–N Example 3.2의 24칸 판정(7.4초). 정확한 법칙은 HiGHS 지지에서 분수로 다시 풀어 `general.verify_law`로 확인.
+  - E2·E2′ 불충분 반례 2개와 정확 Farkas 이차식(`tests/test_exactness.py`)
+  - 2+3 조각 11개의 원인 판정. V15 목격점이 p + 2q = 2 위에 있어서 처음 예상(E3)과 달리 E4로 판정됨을 테스트 실패로 발견하고 기대값을 고쳤다.
+- 그 밖의 탐색: Example 3.2에서 2-분할 집계 상한의 최솟값(모든 분할 2,047개)은 k=5 0.99623, k=6 0.90178, k=9 0.12896, k=10 0.07115, k=11 0.02493, k=12 0.00636이었다(임시 스크립트, 약 4초/k). R–N 순서 기반 상한보다 k=5,6에서만 작았다 → C24(탐색).
+- 명령: `pytest` → 전체 통과(약 40초).
