@@ -39,3 +39,4 @@ kernels n=8: not full -> {(0, 1, 7): 20, (0, 1, 8): 27, (0, 2, 8): 7, (0, 3, 8):
 real	1m36.354s
 user	1m29.761s
 sys	0m1.142s
+twovalued-reduced: (W) and (N) jointly feasible -> {True: 5182}

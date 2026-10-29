@@ -4,7 +4,7 @@
 
 Float HiGHS and random instances with fixed seeds: these are explorations, not proofs.
 Names: certainty-random, certainty-boundary, certainty-minimal, regimes, split,
-positivstellensatz, productform, scaled, twovalued, k2, decomp, kernels.
+positivstellensatz, productform, scaled, twovalued, twovalued-reduced, k2, decomp, kernels.
 """
 import itertools
 import math
@@ -294,6 +294,37 @@ def twovalued():
     print("twovalued: construction works ->", dict(cnt))
 
 
+def twovalued_reduced():
+    """Proposition C3: at a two-valued minimal point the certainty question is the joint
+    feasibility of two 1-D moment problems (W) and (N) sharing omega = P(all b's = 1)."""
+    import random
+    rng = random.Random(1)
+    cnt = Counter()
+    for _ in range(20000):
+        alpha, beta = rng.randint(1, 10), rng.randint(2, 10)
+        n = alpha + beta
+        k = rng.randint(1, n - 1)
+        b = rng.uniform(0.001, 0.999)
+        a = (k - (beta - 1) * b) / alpha
+        if not 0 < a <= b:
+            continue
+        s_lo, s_hi = max(0, k - alpha), min(k, beta - 1)
+        Sw = list(range(s_lo, s_hi + 1)) + [beta]
+        Sn = list(range(max(0, k - beta), alpha + 1))
+        nw, nn = len(Sw), len(Sn)
+        C = k - alpha * a * a + 2 * b * (k - beta) - (beta - 1) * b * b
+        rows = [[1] * nw + [0] * nn, Sw + [0] * nn, [s * (s - 1) for s in Sw] + [0] * nn]
+        rhs = [1, beta * b, beta * (beta - 1) * b * b]
+        for coeffs, shift, r in (([1] * nn, 1, 0), (Sn, k - beta, b),
+                                  ([x * (x - 1) for x in Sn], (k - beta) * (k - beta - 1), C)):
+            row = [0] * nw + list(coeffs)
+            row[nw - 1] = -shift
+            rows.append(row)
+            rhs.append(r)
+        cnt[lp_feasible(np.array(rows, float), np.array(rhs, float))] += 1
+    print("twovalued-reduced: (W) and (N) jointly feasible ->", dict(cnt))
+
+
 # ------------------------------------------------------------------ misc
 
 def k2():
@@ -344,7 +375,7 @@ def kernels():
 RUNS = {"certainty-random": certainty_random, "certainty-boundary": certainty_boundary,
         "certainty-minimal": certainty_minimal, "regimes": regimes, "split": split,
         "positivstellensatz": positivstellensatz, "productform": productform, "scaled": scaled,
-        "twovalued": twovalued, "k2": k2, "decomp": decomp, "kernels": kernels}
+        "twovalued": twovalued, "twovalued-reduced": twovalued_reduced, "k2": k2, "decomp": decomp, "kernels": kernels}
 
 if __name__ == "__main__":
     names = sys.argv[1:] or ["all"]

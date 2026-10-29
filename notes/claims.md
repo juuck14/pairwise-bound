@@ -34,7 +34,7 @@
 |---|---|---|---|
 | C15 | (보조정리 1) 쌍별 독립이면 E[S∣X_j=1] = 1+LOO_j, E[S∣X_j=0] = LOO_j. (보조정리 M) P̄는 각 p_j에 대해 비감소 | **증명됨** | exactness §1, `tests/test_exactness.py::test_conditional_mean_identity_on_an_exact_law`, `::test_monotonicity_float`(부동소수점 교차확인) |
 | C16 | (정리 C1·C2) P̄=1이면 p_j<1인 모든 j에서 LOO_j ≥ k. 역은 k ∈ {1, n−2, n−1, n}과 동일 주변확률에서 성립. k=n−2는 새 명시적 구성 | **증명됨** (k=1·동일은 R–N 재현) | exactness §2, `::test_top2_complement_law_is_exact_and_certain` |
-| C17 | (추측 C) 모든 n, k에서 P̄=1 ⇔ p_j<1인 모든 j에서 LOO_j ≥ k | **추측** | 부동소수점 증거 4,000점 이상(수치 허용오차 사례 155점 제외 불일치 0), `results/runs/explore-exactness/`, `::test_certainty_criterion_float`. 실패한 증명 경로: research_reassessment §6 |
+| C17 | (추측 C) 모든 n, k에서 P̄=1 ⇔ p_j<1인 모든 j에서 LOO_j ≥ k | **추측** | 부동소수점 증거 4,000점 이상(수치 허용오차 사례 155점 제외 불일치 0), `results/runs/explore-exactness/`, `::test_certainty_criterion_float`. 실패한 증명 경로: research_reassessment §6. 두 값 주변확률에서는 (명제 C3, **증명됨**) 두 1차원 모멘트 문제의 ω-구간 겹침과 동치이며, 겹침은 무작위 5,182개 최소점에서 확인(탐색) |
 | C18 | (E2·E3·E4·E2′·E5) BP-최적 지지가 유일한 K일 때 정확성의 필요조건: 조건부 평균 구간, {0,k,n}의 두 근 경직성, 층 위 법칙, 2-그룹 집계, 순서 기반 상한의 부분문제 환원 | **증명됨** | exactness §3, §6 |
 | C19 | E2와 E2′(모든 2-분할)는 충분하지 않다: n=4, k=3, p=(13/20,19/50,3/4,17/50); n=5, k=4, p=(29/100,2/5,13/25,23/25,33/50) | **정확 계산 검증** (정확 Farkas 이차식) | exactness §3, `::test_interval_condition_is_not_sufficient`, `::test_two_group_split_conditions_are_not_sufficient` |
 | C20 | (정리 S) P̄ = S₂/C(k,2) ⇔ (I) LOO_j ≤ k−1 (p_j>0), (II) (p_ip_j)의 분수 K_k-분해, (III) 1 − S₁ + 2S₂/k ≥ 0. 따름: P̄(n,2,p) = S₂ ⇔ max_{p_j>0} LOO_j ≤ 1 | **증명됨** (동일 주변확률이면 R–N Prop. 4.3(b) 재현) | exactness §4, `::test_second_moment_term_exactness_float`, `::test_petersen_formula_for_second_moment_term` |

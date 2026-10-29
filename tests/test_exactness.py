@@ -146,6 +146,54 @@ def test_petersen_formula_for_second_moment_term():
     assert rho[(0, 1, 2)] == p_**2 / 3 and rho[(0, 2, 3)] == p_ * (3 * q_ - p_) / 6
 
 
+def test_theorem_s_law_is_exact():
+    """Theorem S constructively: k = 2 with rho_ij = p_i p_j, and n = 5, k = 3 with the
+    Petersen formula; when (I)-(III) hold the law is exact and P(S >= k) = S2 / C(k,2)."""
+    rng = random.Random(29)
+    built = {2: 0, 3: 0}
+    for _ in range(300):
+        n = 5
+        p = [F(rng.randint(1, 60), 100) for _ in range(n)]
+        s1, s2 = G.moments(p)
+        cond_I = all(x == 0 or l <= 1 for x, l in zip(p, G.leave_one_out(p)))
+        law = G.second_moment_layer_law(p, 2, {(i, j): p[i] * p[j] for i, j in combinations(range(n), 2)})
+        assert (law is not None) == cond_I
+        if law is not None:
+            s_law = G.verify_law(p, law)
+            assert set(s_law) <= {0, 1, 2} and G.tail(s_law, 2) == s2
+            built[2] += 1
+        w = {(i, j): p[i] * p[j] for i, j in combinations(range(n), 2)}
+        rho = {}
+        for T in combinations(range(n), 3):
+            comp = tuple(i for i in range(n) if i not in T)
+            rho[T] = (sum(w[e] for e in combinations(T, 2)) + w[comp] - s2 / 3) / 2
+        law = G.second_moment_layer_law(p, 3, rho)
+        cond = (all(x == 0 or l <= 2 for x, l in zip(p, G.leave_one_out(p)))
+                and min(rho.values()) >= 0 and 1 - s1 + 2 * s2 / 3 >= 0)
+        assert (law is not None) == cond
+        if law is not None:
+            s_law = G.verify_law(p, law)
+            assert set(s_law) <= {0, 1, 3} and G.tail(s_law, 3) == s2 / 3
+            built[3] += 1
+    assert built[2] > 20 and built[3] > 20
+
+
+@pytest.mark.parametrize("n, k, pbar", [(6, 3, F(1, 5)), (6, 5, F(1, 2)), (6, 3, F(7, 10)), (5, 3, F(4, 5))])
+def test_local_robustness_near_identical_marginals_float(n, k, pbar):
+    """Theorem L(a), float: for non-exceptional identical-marginal supports, small
+    heterogeneous perturbations keep the bound exact."""
+    bp, laws = G.bp_optimum(n, k, *G.moments([pbar] * n))
+    K = sorted(laws[0]) if bp < 1 else None
+    if K is not None:
+        assert G.layer_kernel_dim(n, K) == 0
+    rng = random.Random(n * 100 + k)
+    for _ in range(5):
+        p = [float(pbar) + 0.004 * (rng.random() - 0.5) for _ in range(n)]
+        s1, s2 = (float(x) for x in G.moments(p))
+        bp_f = float(G.bp_optimum(n, k, *G.moments([F(x) for x in p]))[0])
+        assert abs(G.float_tight(p, k)[0] - bp_f) < 1e-8
+
+
 def random_rational(rng, lo=1, hi=99, den=100):
     return F(rng.randint(lo, hi), den)
 

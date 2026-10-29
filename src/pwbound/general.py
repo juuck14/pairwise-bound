@@ -155,6 +155,34 @@ def top2_complement_law(p):
     return law
 
 
+def second_moment_layer_law(p, k, rho):
+    """The law of Theorem S on layers {0, 1, k}: rho is a measure on k-subsets (dict
+    {tuple: Fraction}) with sum_{T >= {i,j}} rho(T) = p_i p_j. Returns the joint law, or
+    None if a single-atom or the empty-atom mass would be negative."""
+    p = as_fractions(p)
+    n = len(p)
+    law = {}
+    for T, r in rho.items():
+        if r < 0:
+            return None
+        if r:
+            law[tuple(1 if i in T else 0 for i in range(n))] = Fraction(r)
+    loo = leave_one_out(p)
+    for i in range(n):
+        w = p[i] - p[i] * loo[i] / (k - 1)
+        if w < 0:
+            return None
+        if w:
+            e = tuple(1 if t == i else 0 for t in range(n))
+            law[e] = law.get(e, 0) + w
+    rest = 1 - sum(law.values())
+    if rest < 0:
+        return None
+    if rest:
+        law[tuple(0 for _ in range(n))] = rest
+    return law
+
+
 def solve_exact_on_support(p, states):
     """Solve the pairwise-independence moment equations exactly on the given states.
 
