@@ -135,3 +135,15 @@
 - 웹 검색 2회, arXiv 검색 3회(`https://arxiv.org/search/?query=...&order=-announced_date_first`), arXiv:2209.01587 초록 확인.
 - 결과: 같은 결과를 다룬 후속 문헌을 찾지 못함(검색 범위 한정, `notes/literature.md` §4).
 - 실패: arXiv 저자 페이지 URL(`/a/natarajan_k_1`) 404. 저자 ID를 몰라 검색 페이지로 대체.
+
+### J15. 11/1 데모 제출 준비 (2026-10-29)
+- `scripts/__init__.py`: 패키지를 설치하지 않은 상태에서도 `src/`를 경로에 넣어 `python -m scripts.demo`가 동작하게 함.
+- pytest `pythonpath`에 `src` 추가.
+- `requirements.txt`(최소 버전) 추가. 정확한 기록 환경은 `requirements.lock`.
+- 다른 Python 버전 확인: 추적 파일만 복사한 디렉터리에서 `pip install -r requirements.txt`로 설치(editable 설치 없음) 후 데모와 `pytest` 실행.
+  - Python 3.11.17 (numpy 2.4.6, scipy 1.17.1, sympy 1.14.0): 데모 28/28 PASS, 996 passed (25.2초)
+  - Python 3.12.3 (numpy 2.5.4, scipy 1.18.1, sympy 1.14.0): 데모 28/28 PASS, 996 passed (16.3초)
+  - Python 3.13.17 (기록 환경): 996 passed (25.3초)
+  - 첫 시도 실패: pytest가 설치되지 않은 `pwbound`를 찾지 못함 → `pythonpath`에 `src` 추가로 해결.
+- `results/demo_output.txt`: 대표 사례 데모 출력 저장. 부동소수점 차이 줄을 뺀 나머지가 현재 출력과 같은지 테스트로 확인.
+- `SUBMISSION.md`: 실행 방법, 출력 해설, 검사 28개 내역, 소요 시간, 결과 요약, 한계.

@@ -1,0 +1,7 @@
+# Minimum versions. The exact environment used for the recorded results is in
+# requirements.lock (Python 3.13). Tested also on Python 3.11 and 3.12 (SUBMISSION.md).
+numpy>=1.26
+scipy>=1.11
+sympy>=1.12
+matplotlib>=3.8
+pytest>=8

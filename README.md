@@ -15,15 +15,21 @@ M(p,q) = max P(X1+X2+X3+X4+X5 ≥ 3),  0 ≤ p ≤ q ≤ 1
 
 모든 최종 주장은 유리수 정확 계산과, 최적화 코드와 분리된 독립 검증기로 확인한다.
 
+> **11/1 데모 제출:** 실행 방법과 출력 해설은 [`SUBMISSION.md`](SUBMISSION.md)에 있다. 대표 사례 출력 예시는 [`results/demo_output.txt`](results/demo_output.txt)에 있다.
+
 ## 빠른 시작
+
+Python 3.11 이상(3.11, 3.12, 3.13에서 확인).
 
 ```bash
 python3 -m venv .venv && . .venv/bin/activate
-pip install -e '.[dev,symbolic,plot]'
+pip install -r requirements.txt           # 최소 버전 목록 (정확한 기록 환경은 requirements.lock)
 python -m scripts.demo                    # 대표 사례 p=2/5, q=3/5
 python -m scripts.demo --p 1/5 --q 1/2    # 다른 유리수 입력
 pytest                                    # 전체 테스트
 ```
+
+`pip install -e '.[dev,symbolic,plot]'`로 패키지를 설치해도 같은 명령이 동작한다.
 
 데모는 다음을 출력한다(네트워크·LLM API 호출 없음).
 - 정확한 최댓값
