@@ -76,7 +76,8 @@ python -m scripts.demo --p 1/5 --q 1/2
 | `python -I verifier/verify.py results/certificates/p2_5-q3_5.json` | 저장된 증서만 독립 검증 | 1초 미만 |
 | `python -m scripts.classify` | 0≤p≤q≤1 전체의 조각 분류 증서 생성 + 검증(54개 검사) | 약 10초 |
 | `python -m scripts.plot_regions` | 조각 지도 그림 | 약 8초 |
-| `pytest` | 전체 테스트 996개 | 16–25초 |
+| `python -m scripts.plot_slice` | q=3/5 단면 비교 그림 | 약 4초 |
+| `pytest` | 전체 테스트 1000개 | 18–25초 |
 
 ## 현재까지의 결과 요약
 

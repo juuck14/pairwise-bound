@@ -91,7 +91,7 @@ python -m scripts.plot_regions      # 그림 (예시용)
 | `verifier/SPEC.md`, `verifier/verify.py` | 독립 검증기 명세와 구현 (표준 라이브러리만) |
 | `scripts/demo.py` | 한 명령 데모 |
 | `scripts/make_certificate.py` | 임의 (p,q)의 증서 생성 |
-| `scripts/classify.py`, `scripts/plot_regions.py`, `scripts/scan.py` | 조각 분류·영역도·격자 탐색 |
+| `scripts/classify.py`, `scripts/plot_regions.py`, `scripts/plot_slice.py`, `scripts/scan.py`, `scripts/junctions.py` | 조각 분류·영역도·단면 비교 그림·격자 탐색·교점표 |
 | `results/certificates/`, `results/regions/` | 점 증서, 영역 증서·문서·그림 |
 | `tests/` | 모형, 정확 해법, 교차확인, 검증기 음성 테스트, 검증기 독립성 |
 | `notes/` | 계획, 문제 정의, 증명, 주장 상태, 문헌, 연구일지, AI 상호작용 기록, 인계 문서 |
@@ -106,3 +106,5 @@ python -m scripts.plot_regions      # 그림 (예시용)
 - 연구일지: [`notes/journal.md`](notes/journal.md)
 - AI 상호작용 기록: [`notes/ai_log.md`](notes/ai_log.md)
 - 세션 인계: [`notes/HANDOFF.md`](notes/HANDOFF.md)
+- 발표 자료에 넣을 내용(검토용 초안): [`notes/presentation_content.md`](notes/presentation_content.md)
+- 데모 제출 안내: [`SUBMISSION.md`](SUBMISSION.md)

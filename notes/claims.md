@@ -22,6 +22,9 @@
 | C9 | **따름정리 C**: R–N의 두 모멘트 BP 상한과 Theorem 3.1 순서 기반 상한(§3.2 강화 포함, SSS·Chebyshev도)은 D에서 R_V02 ∪ R_V16 ∪ R_V18 ∪ Z(내부 없음)에서만 tight하다. 나머지 8개 조각 내부(Z 제외)에서는 엄밀히 느슨하다 | **증명됨(컴퓨터 보조)** | `notes/proofs/theorem_AB.md` 따름정리 C, `tests/test_rn_bounds.py` |
 | C10 | 쌍대가 s=a+b만의 함수인 활성 조각은 V02(=C(s,2)/3, 비순서 SSS), V16(=(s−1)(s−2)/2, 1−S₁+S₂), V18(=1)뿐이다 | 정확 계산 검증 | `tests/test_rn_bounds.py::test_only_sum_only_vertices_carry_full_rank` |
 | C11 | 조각 지도의 교점은 D 꼭짓점 3개와 교점 11개다. 네 조각이 만나는 점이 6개 있다. 예: (2/5,4/5)에서 V10/V11/V14/V15, (7/8−√33/8, 3/8+√33/24)에서 V02/V12/V16/V19 | 좌표와 "표의 조각들이 그 점에서 M을 정확히 달성"은 **정확 계산 검증**(sympy, `tests/test_junctions.py`). 교점 목록이 빠짐없는지와 인접 판정은 **탐색**(반지름 1e-4 원 표본) | `results/regions/JUNCTIONS.md`, `scripts/junctions.py` |
+| C12 | D에서 M(p,q)=1 ⇔ q=1, 또는 (q ≥ 3/2 − p 이고 q ≥ 1 − p/3) | 컴퓨터 보조 증명(V18 facet 부등식에서 유도) + 격자 확인 | `results/regions/REGIONS.md` V18, `tests/test_regions.py::test_certainty_region` |
+| C13 | q=3/5 단면은 조각 V16, V02, V12, V11을 지난다. 경계는 p=(√21−3)/10, 1/5, 1−√7/5다. 기존 상한은 p ∈ [0,1/5] ∪ {3/5}에서 정확하고, 1/5<p<3/5에서는 엄밀히 크다 | 정확 계산(sympy: 경계 좌표, 그리고 열린 구간에서 상한을 이루는 8개 이차식 어느 것도 M과 만나지 않음). 격자 p=(3/5)·k/60에서도 확인 | `tests/test_rn_bounds.py::test_slice_q_three_fifths_facts`, `results/regions/slice_q3_5.png` |
+| C14 | (탐색) D의 60분할 격자에서 기존 상한과 M의 차이가 가장 큰 점은 (1/10, 5/6)이다. 상한 389/450, M 41/60, 차이 163/900 | 탐색 | journal J16 |
 
 ## 실패 접근
 

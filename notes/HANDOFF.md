@@ -3,7 +3,8 @@
 _매 세션 종료 시 갱신한다. 첫 줄의 "다음 행동"이 바로 할 일이다._
 
 ## 다음 행동
-1. (진행 중) 11/1 데모 제출 준비와 발표 내용 문서 작성 — 이 단계가 끝나면 이 항목을 갱신한다.
+1. **(사람)** 발표 내용 초안 `notes/presentation_content.md`를 검토하고, 슬라이드 제작 여부와 방향을 결정한다.
+   - 11/1 데모 제출물은 준비 완료(`SUBMISSION.md`, 태그 `demo-v1`).
 2. 완료: `verifier/SPEC.md` 사람 검토(2026-10-29). 모델/버전 칸은 사람 결정으로 제거.
 3. 발표 자료 자체는 사람이 내용 문서를 검토한 뒤에 만든다.
 4. (선택 확장) 교점 목록이 빠짐없는지 엄밀화(C11은 좌표·최소 달성만 정확). 따름정리 C의 Z 집합 정확 기술. p>q 영역 분류.
@@ -40,7 +41,8 @@ python -I verifier/verify.py results/certificates/p2_5-q3_5.json
 python -I verifier/verify.py results/regions/region_certificate.json
 python -m scripts.plot_regions                           # 영역도
 python -m scripts.junctions                              # 교점표 (약 3.5분)
-pytest                                                   # 996 tests
+python -m scripts.plot_slice                             # q=3/5 단면 비교 그림
+pytest                                                   # 1000 tests
 ```
 - 무작위 테스트 seed: 20261028, 20261029, 7, 11, 13 (`tests/`에 고정)
 

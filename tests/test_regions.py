@@ -150,3 +150,15 @@ def test_region_format_errors(verifier, region_cert):
     text = CERT_PATH.read_text(encoding="utf-8").replace('"witness": [\n        "1/4"',
                                                           '"witness": [\n        0.25', 1)
     assert verifier.verify_text(text)["error"]["code"] == "E_JSON"
+
+
+def test_certainty_region():
+    """In D: M(p, q) = 1  iff  q = 1, or (q >= 3/2 - p and q >= 1 - p/3).
+    (notes/presentation_content.md slide 9)"""
+    from pwbound import exact_lp
+    n = 60
+    for i in range(n + 1):
+        for j in range(i, n + 1):
+            p, q = F(i, n), F(j, n)
+            claimed = q == 1 or (q >= F(3, 2) - p and q >= 1 - p / 3)
+            assert (exact_lp.envelope(p, q) == 1) == claimed, (p, q)

@@ -99,3 +99,44 @@ SUMMARY_TABLE = {   # notes/proofs/theorem_AB.md, as {(i, j): coefficient of p^i
 @pytest.mark.parametrize("vid", sorted(SUMMARY_TABLE))
 def test_summary_table_formulas(vid):
     assert parametric.vertex_by_id(vid)["Q"] == {m: F(c) for m, c in SUMMARY_TABLE[vid].items()}
+
+
+def test_slice_q_three_fifths_facts():
+    """Facts used by scripts/plot_slice.py and notes/presentation_content.md."""
+    import sympy as sp
+    q = F(3, 5)
+    for k in range(0, 61):
+        p = q * k / 60
+        assert R.ordered_bp_tightened(p, q) == R.unordered_bp(p, q)
+        m = exact_lp.envelope(p, q)
+        assert (R.unordered_bp(p, q) == m) == (p <= F(1, 5) or p == q), p
+    P_, Q_ = sp.symbols("p q")
+
+    def qexpr(vid):
+        f = parametric.vertex_by_id(vid)["Q"]
+        return sum(sp.Rational(c.numerator, c.denominator) * P_**i * Q_**j for (i, j), c in f.items())
+
+    for a, b, x in (("V16", "V02", (sp.sqrt(21) - 3) / 10), ("V02", "V12", sp.Rational(1, 5)),
+                    ("V12", "V11", 1 - sp.sqrt(7) / 5)):
+        assert sp.simplify((qexpr(a) - qexpr(b)).subs({P_: x, Q_: sp.Rational(3, 5)})) == 0
+
+
+def test_slice_bound_strict_on_open_interval_exactly():
+    """On q = 3/5 the prior bound min_{w in W} Q_w never equals M for 1/5 < p < 3/5:
+    no Q_w meets the active piece (V12, then V11) inside that interval."""
+    import sympy as sp
+    p = sp.symbols("p", real=True)
+    q = sp.Rational(3, 5)
+
+    def qy(y):
+        y0, y1, y2, y3, y4, y5 = (sp.Rational(t.numerator, t.denominator) for t in y)
+        return y0 + 2 * p * y1 + 3 * q * y2 + 2 * p**2 * y3 + 6 * q**2 * y4 + 6 * p * q * y5
+
+    segments = [("V12", sp.Rational(1, 5), 1 - sp.sqrt(7) / 5), ("V11", 1 - sp.sqrt(7) / 5, q)]
+    for w in R.dual_points():
+        for vid, lo, hi in segments:
+            diff = sp.expand(qy(w) - qy(parametric.vertex_by_id(vid)["y"]))
+            assert diff != 0
+            inside = [r for r in sp.solve(diff, p)
+                      if r.is_real and sp.simplify(r - lo) > 0 and sp.simplify(hi - r) > 0]
+            assert not inside, (w, vid, inside)
