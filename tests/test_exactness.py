@@ -637,6 +637,39 @@ def test_three_coordinate_tail_design_float():
     assert checked > 1500
 
 
+def test_block_chords_with_one_extra_coordinate_float():
+    """Lemma C12 (float): for the block B + {t} (t in A) and integer chords
+    g(x) = (x-c)(x-c-1), E_pi[g] >= s (E_R[g]) at the peeling root s, where under R the block
+    count is beta + Bern(y_t); also s*y_s(a) and s*(1-y_s(a)) are nondecreasing in s."""
+    rng = random.Random(38)
+    for _ in range(2000):
+        bb = rng.uniform(0.05, 0.99)
+        a = bb * rng.random()
+        s1, s2 = sorted(bb * bb * rng.uniform(0.01, 1) for _ in range(2))
+        y1, y2 = G.peeling_y(s1, bb, a), G.peeling_y(s2, bb, a)
+        assert s1 * y1 <= s2 * y2 + 1e-12 and s1 * (1 - y1) <= s2 * (1 - y2) + 1e-12
+    checked = 0
+    for _ in range(800):
+        n = rng.randint(6, 12)
+        k = rng.randint(3, n - 3)
+        beta = rng.randint(2, n - 4)
+        g_ = _general_minimal_point(rng, n, k, beta)
+        if g_ is None:
+            continue
+        b, aA = g_
+        _, _, _, s, z = G.peeling_parameters([b] * beta + aA, k)
+        for t in range(len(aA)):
+            at, yt = aA[t], z[beta + t]
+            e1, e2 = beta * b + at, beta * (beta - 1) * b * b + 2 * beta * b * at    # E N, E N(N-1) under pairwise indep.
+            for c in range(0, beta + 2):
+                g = lambda x: (x - c) * (x - c - 1)
+                Epi = e2 - 2 * c * e1 + c * (c + 1)
+                ER = (1 - yt) * g(beta) + yt * g(beta + 1)
+                assert Epi - s * ER >= -1e-9
+        checked += 1
+    assert checked > 300
+
+
 def test_rn_example_3_2_verdicts():
     """Every BP cell of R-N Example 3.2 is decided with an exact certificate."""
     from scripts.explain_rn_example import analyse
