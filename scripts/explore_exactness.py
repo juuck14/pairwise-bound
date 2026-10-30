@@ -5,7 +5,7 @@
 Float HiGHS and random instances with fixed seeds: these are explorations, not proofs.
 Names: certainty-random, certainty-boundary, certainty-minimal, regimes, split,
 positivstellensatz, productform, scaled, twovalued, twovalued-reduced, gap, k2, decomp, kernels,
-peeling, peeling-twovalued.
+peeling, peeling-twovalued, facets-a4.
 """
 import itertools
 import math
@@ -479,11 +479,62 @@ def peeling_twovalued():
     print("peeling-twovalued: ->", dict(cnt), "min slack (I) %.2e, (II) %.2e" % (worst["I"], worst["II"]))
 
 
+def facets_a4():
+    """Proposition C9 with |A| = 4: facets of conv{(x, x_i x_j) : x in {0,1}^4, L <= |x| <= U}
+    (S_4 orbit types), and slacks of the moments (phi(a) - s phi(y))/(1-s) at random minimal
+    points, per facet type."""
+    from scipy.spatial import ConvexHull
+    pairs = list(itertools.combinations(range(4), 2))
+    phi = lambda x: [x[i] for i in range(4)] + [x[i] * x[j] for i, j in pairs]
+
+    def facet_list(L, U):
+        pts = [x for x in itertools.product((0, 1), repeat=4) if L <= sum(x) <= U]
+        P = np.array([phi(x) for x in pts], dtype=float)
+        c = P.mean(axis=0)
+        B = np.linalg.svd(P - c)[2][:np.linalg.matrix_rank(P - c)]
+        out = {}
+        for eq in ConvexHull((P - c) @ B.T).equations:       # Qhull splits facets into simplices
+            w = B.T @ eq[:-1]
+            w0 = eq[-1] - w @ c                              # w.v + w0 <= 0 on the polytope
+            scale = max(abs(t) for t in list(w) + [w0])
+            g, g0 = -w / scale, -w0 / scale                  # g.v + g0 >= 0
+            out[tuple(np.round(np.append(g, g0), 9))] = (g, g0)
+        return list(out.values())
+
+    rng = random.Random(43)
+    instances = []
+    while len(instances) < 400:
+        beta = rng.randint(2, 8)
+        n = beta + 4
+        k = rng.randint(3, n - 3)
+        lo_b, hi_b = k / (n - 1), min(0.9999, k / (beta - 1))
+        if lo_b >= hi_b:
+            continue
+        b = rng.uniform(lo_b, hi_b)
+        KA = k - (beta - 1) * b
+        w = [rng.random() ** rng.choice([1, 2, 5]) for _ in range(4)]
+        a = [KA * t / sum(w) for t in w]
+        if max(a) >= b * 0.9999:
+            continue
+        _, _, _, s, z = G.peeling_parameters([b] * beta + a, k)
+        y = z[beta:]
+        mom = np.array([(phi_v - s * phi_w) / (1 - s) for phi_v, phi_w in
+                        zip([a[i] for i in range(4)] + [a[i] * a[j] for i, j in pairs],
+                            [y[i] for i in range(4)] + [y[i] * y[j] for i, j in pairs])])
+        instances.append(((max(0, k - beta), min(k, 4)), mom))
+    for L, U in [(0, 3), (0, 4), (1, 3), (1, 4)]:
+        fl = facet_list(L, U)
+        moms = [m for r, m in instances if r == (L, U)]
+        worst = min((g @ m + g0 for m in moms for g, g0 in fl), default=float("nan"))
+        print("facets-a4: range [%d,%d]: %d facets, %d instances, min facet value %.2e"
+              % (L, U, len(fl), len(moms), worst))
+
+
 RUNS = {"certainty-random": certainty_random, "certainty-boundary": certainty_boundary,
         "certainty-minimal": certainty_minimal, "regimes": regimes, "split": split,
         "positivstellensatz": positivstellensatz, "productform": productform, "scaled": scaled,
         "twovalued": twovalued, "twovalued-reduced": twovalued_reduced, "gap": gap, "k2": k2, "decomp": decomp,
-        "kernels": kernels, "peeling": peeling, "peeling-twovalued": peeling_twovalued}
+        "kernels": kernels, "peeling": peeling, "peeling-twovalued": peeling_twovalued, "facets-a4": facets_a4}
 
 if __name__ == "__main__":
     names = sys.argv[1:] or ["all"]

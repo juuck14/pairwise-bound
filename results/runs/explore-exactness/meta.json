@@ -3,7 +3,7 @@
   "inputs": "fixed seeds inside scripts/explore_exactness.py (1, 7, 99, 11, 5, 4, 12, 17, 2, 8, 41; peeling 2026; peeling-twovalued 7)",
   "seed": "per run, see script",
   "elapsed_seconds": 246.3,
-  "note": "float HiGHS exploration; not proofs. Output in output.txt (git commit = state before this run was committed). Rerun 2026-10-30 after adding the peeling runs; earlier runs reproduced identically.",
+  "note": "float HiGHS exploration; not proofs. Output in output.txt (git commit = state before this run was committed). Rerun 2026-10-30 after adding the peeling runs; earlier runs reproduced identically. facets-a4 (seed 43) appended on 2026-10-30 after the rerun (python -m scripts.explore_exactness facets-a4, under 1 s).",
   "environment": {
     "python": "3.13.17",
     "platform": "Linux-6.18.44-fc-v185-x86_64-with-glibc2.39",

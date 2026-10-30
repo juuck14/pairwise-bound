@@ -47,3 +47,7 @@ kernels n=8: not full -> {(0, 1, 7): 20, (0, 1, 8): 27, (0, 2, 8): 7, (0, 3, 8):
 peeling: k-design D realisable -> {(6, 3, 'realisable'): 40, (7, 3, 'realisable'): 40, (7, 4, 'realisable'): 36, (8, 3, 'realisable'): 60, (8, 4, 'realisable'): 40, (8, 5, 'realisable'): 32, (9, 3, 'realisable'): 60, (9, 4, 'realisable'): 60, (9, 5, 'realisable'): 36, (9, 6, 'realisable'): 29, (10, 4, 'realisable'): 60, (10, 5, 'realisable'): 60}
 peeling: worst LP violation 0.00e+00
 peeling-twovalued: -> {'ok': 182726} min slack (I) -5.68e-14, (II) -6.75e-14
+facets-a4: range [0,3]: 68 facets, 129 instances, min facet value 1.59e-15
+facets-a4: range [0,4]: 56 facets, 226 instances, min facet value 3.29e-16
+facets-a4: range [1,3]: 41 facets, 20 instances, min facet value 7.14e-10
+facets-a4: range [1,4]: 68 facets, 25 instances, min facet value 1.08e-08
