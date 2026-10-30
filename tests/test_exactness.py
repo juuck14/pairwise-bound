@@ -294,6 +294,147 @@ def test_monotonicity_float():
         assert G.float_tight(p2, k)[0] >= G.float_tight(p, k)[0] - 1e-9
 
 
+# ---------------------------------------------------------------- Theorem C4 / Proposition C5
+
+def test_peeling_curve_lemma():
+    """Lemma P1: f_s(y) = (1-y)(b-sy). Exact identities y_{b^2}(a) = a/b and
+    f_s(a/sqrt s) - f_1(a) = a (1 - sqrt s)(1 - b/sqrt s); float check of a <= y <= a/sqrt s."""
+    import sympy as sp
+    a_, b_, r_ = sp.symbols("a b r", positive=True)          # r = sqrt(s)
+    f = lambda y, s: (1 - y) * (b_ - s * y)
+    assert sp.expand(f(a_ / b_, b_ ** 2) - f(a_, 1)) == 0
+    assert sp.expand(f(a_ / r_, r_ ** 2) - f(a_, 1) - a_ * (1 - r_) * (1 - b_ / r_)) == 0
+    rng = random.Random(30)
+    for _ in range(2000):
+        b = rng.uniform(0.05, 0.999)
+        s = b * b * rng.random()
+        a = b * rng.random()
+        y = G.peeling_y(s, b, a)
+        assert abs((1 - y) * (b - s * y) - (1 - a) * (b - a)) < 1e-12
+        assert a - 1e-12 <= y <= min(1.0, a / s ** 0.5) + 1e-12
+
+
+def test_peeling_phi_at_b_squared():
+    """Lemma P2: at s = b^2, y_i = a_i/b, hence Phi(b^2) = (k-1)(1-b)/b (exact)."""
+    rng = random.Random(31)
+    checked = 0
+    for _ in range(200):
+        n = rng.randint(4, 9)
+        k = rng.randint(1, n - 2)
+        p = [random_rational(rng, 1, 99) for _ in range(n)]
+        red = G.minimal_point_below(p, k)
+        if red is None or red[1] is None:
+            continue
+        _, pm, km = red
+        b = max(pm)
+        B = [x for x in pm if x == b]
+        assert len(B) >= 2 and sum(pm) - b == km
+        phi = sum(x / b for x in pm if x != b) - (km - len(B) + b / b ** 2)
+        assert phi == (km - 1) * (1 - b) / b
+        checked += 1
+    assert checked > 50
+
+
+@pytest.mark.parametrize("alpha,b", [(3, F(3, 4)), (3, F(2, 3)), (4, F(1, 2)), (5, F(9, 10)),
+                                     (6, F(3, 5)), (7, F(1, 2))])
+def test_theorem_c4_exact_two_valued(alpha, b):
+    """Theorem C4 on exact instances (|B| = 2, alpha coordinates a = (2-b)/alpha): the peeling
+    law is a pairwise independent law with S >= 2 a.s., and s <= b^2."""
+    p, s, z = G.two_valued_k2_instance(alpha, b)
+    assert sum(p) - b == 2 and max(p[2:]) < b
+    assert 0 < s <= b * b
+    for a, y in zip(p[2:], z[2:]):                          # Lemma P1 equation, exactly
+        assert (1 - y) * (b - s * y) == (1 - a) * (b - a)
+    assert sum(z[2:]) == 2 - 2 + b / s                      # Lemma P2 equation, exactly
+    s_law = G.verify_law(p, G.peeling_law_k2(p, s, z))
+    assert min(s_law) >= 2
+
+
+def test_theorem_c4_float_random():
+    """float: at random points satisfying the k = 2 condition, the reduced minimal point
+    carries the peeling law with S >= 2 a.s. (moments to 1e-12)."""
+    rng = random.Random(20261030)
+    checked = 0
+    for _ in range(300):
+        n = rng.randint(5, 9)
+        p = [F(rng.randint(1, 99), 100) for _ in range(n)]
+        red = G.minimal_point_below(p, 2)
+        if red is None or red[1] is None or red[2] != 2:
+            continue
+        pm = red[1]
+        B, A, b, s, z = G.peeling_parameters(pm, 2)
+        assert len(B) >= 2 and s <= b * b
+        pf = [float(x) for x in pm]
+        law = G.peeling_law_k2(pf, s, z)
+        assert min(law.values()) >= -1e-13 and all(sum(x) >= 2 for x in law)
+        m = len(pf)
+        assert abs(sum(law.values()) - 1) < 1e-12
+        for i in range(m):
+            assert abs(sum(w for x, w in law.items() if x[i]) - pf[i]) < 1e-12
+        for i, j in combinations(range(m), 2):
+            assert abs(sum(w for x, w in law.items() if x[i] and x[j]) - pf[i] * pf[j]) < 1e-12
+        checked += 1
+    assert checked > 150
+
+
+def test_peeling_design_moments_consistency_float():
+    """Proposition C5 for any k: the moments of D satisfy sum pi = k, the k-design row sums
+    sum_t Pi_lt = (k-1) pi_l, and every 2x2 table of D is nonnegative."""
+    rng = random.Random(32)
+    checked = 0
+    for _ in range(300):
+        n = rng.randint(5, 10)
+        k = rng.randint(2, n - 2)
+        p = [F(rng.randint(30, 99), 100) for _ in range(n)]
+        red = G.minimal_point_below(p, k)
+        if red is None or red[1] is None or red[2] < 2:
+            continue
+        pm, km = red[1], red[2]
+        B, A, b, s, z = G.peeling_parameters(pm, km)
+        pf = [float(x) for x in pm]
+        pi, Pi = G.peeling_design_moments(pf, s, z)
+        m = len(pf)
+        assert abs(sum(pi) - km) < 1e-9
+        for l in range(m):
+            row = sum(Pi[tuple(sorted((l, t)))] for t in range(m) if t != l)
+            assert abs(row - (km - 1) * pi[l]) < 1e-9
+        for (l, t), w in Pi.items():
+            assert min(w, pi[l] - w, pi[t] - w, 1 - pi[l] - pi[t] + w) >= -1e-12
+        # the residual R exists by induction: z_A satisfies the certainty condition for k - |B|
+        assert all(sum(z[i] for i in A) - z[i] >= km - len(B) - 1e-9 for i in A)
+        checked += 1
+    assert checked > 120
+
+
+def test_two_valued_design_window_float():
+    """Proposition C7 (float): at two-valued minimal points the root s of Phi satisfies the
+    1-D conditions (I), (II), equivalently the symmetric k-design D exists."""
+    import math
+    rng = random.Random(33)
+    checked = 0
+    for _ in range(3000):
+        alpha, beta = rng.randint(1, 10), rng.randint(2, 10)
+        n = alpha + beta
+        k = rng.randint(1, n - 1)
+        lo_b, hi_b = k / (n - 1), min(0.9999, k / (beta - 1))
+        if lo_b >= hi_b:
+            continue
+        b = rng.uniform(lo_b, hi_b)
+        a = (k - (beta - 1) * b) / alpha
+        if not 0 <= a < b:
+            continue
+        _, _, _, s, _ = G.peeling_parameters([b] * beta + [a] * alpha, k)
+        L, U = max(0, k - alpha), min(k, beta)
+        Epi = lambda g: beta * (beta - 1) * b * b * g[2] + beta * b * g[1] + g[0]   # g = (c0, c1, c2): c0 + c1 B + c2 B(B-1)
+        for j in range(L, U):                                                     # (II)
+            g = (j * (j + 1), -2 * j, 1)
+            assert Epi(g) - s * (beta - j) * (beta - j - 1) >= -1e-9
+        g = (-L * U, L + U - 1, -1)                                               # (I): (B-L)(U-B)
+        assert Epi(g) + s * (beta - L) * (beta - U) >= -1e-9
+        checked += 1
+    assert checked > 1500
+
+
 def test_rn_example_3_2_verdicts():
     """Every BP cell of R-N Example 3.2 is decided with an exact certificate."""
     from scripts.explain_rn_example import analyse

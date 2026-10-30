@@ -23,6 +23,15 @@ positivstellensatz: n=6 k=4 points satisfying the inequalities 0, not representa
 productform: feasible -> {False: 236}
 scaled: (conditions hold, certain law exists) -> {'not realisable': 1306, (False, False): 411, (True, True): 83}
 twovalued: construction works -> {True: 4687, False: 580}
+twovalued-reduced: (W) and (N) jointly feasible -> {True: 5182}
+gap: (p,q)=(3/5,4/5) true 0.00533  best-linear 0.00533  prop-G 0.00200
+gap: (p,q)=(1/2,5/8) true 0.00625  best-linear 0.00417  prop-G 0.00156
+gap: (p,q)=(2/5,3/5) true 0.04267  best-linear 0.01067  prop-G 0.00400
+gap: (p,q)=(2/7,5/7) true 0.07891  best-linear 0.01633  prop-G 0.00612
+gap: n=6 p=['11/20', '37/50', '12/25', '63/100', '7/10', '11/25'] true 0.01452  best-linear 0.01200  prop-G 0.00430
+gap: n=6 p=['2/5', '7/10', '14/25', '3/4', '27/50', '13/25'] true 0.01262  best-linear 0.00913  prop-G 0.00494
+gap: n=6 p=['27/50', '49/100', '73/100', '16/25', '2/5', '11/25'] true 0.00634  best-linear 0.00438  prop-G 0.00193
+gap: n=6 p=['1/2', '21/50', '59/100', '41/100', '57/100', '7/10'] true 0.00474  best-linear 0.00368  prop-G 0.00133
 k2: (n, max-formula ok, sum-formula ok) (3, np.True_, np.False_) 24
 k2: (n, max-formula ok, sum-formula ok) (3, True, True) 160
 k2: (n, max-formula ok, sum-formula ok) (4, np.False_, np.False_) 39
@@ -35,16 +44,6 @@ k2: (n, max-formula ok, sum-formula ok) (6, np.False_, np.False_) 21
 k2: (n, max-formula ok, sum-formula ok) (6, True, True) 8
 decomp: (capacity ok, decomposable) -> {(True, True): 738, (False, False): 591, (True, False): 111}
 kernels n=8: not full -> {(0, 1, 7): 20, (0, 1, 8): 27, (0, 2, 8): 7, (0, 3, 8): 7, (0, 4, 8): 7, (0, 5, 8): 7, (0, 6, 8): 7, (0, 7, 8): 27, (1, 7, 8): 20}
-
-real	1m36.354s
-user	1m29.761s
-sys	0m1.142s
-twovalued-reduced: (W) and (N) jointly feasible -> {True: 5182}
-gap: (p,q)=(3/5,4/5) true 0.00533  best-linear 0.00533  prop-G 0.00200
-gap: (p,q)=(1/2,5/8) true 0.00625  best-linear 0.00417  prop-G 0.00156
-gap: (p,q)=(2/5,3/5) true 0.04267  best-linear 0.01067  prop-G 0.00400
-gap: (p,q)=(2/7,5/7) true 0.07891  best-linear 0.01633  prop-G 0.00612
-gap: n=6 p=['11/20', '37/50', '12/25', '63/100', '7/10', '11/25'] true 0.01452  best-linear 0.01200  prop-G 0.00430
-gap: n=6 p=['2/5', '7/10', '14/25', '3/4', '27/50', '13/25'] true 0.01262  best-linear 0.00913  prop-G 0.00494
-gap: n=6 p=['27/50', '49/100', '73/100', '16/25', '2/5', '11/25'] true 0.00634  best-linear 0.00438  prop-G 0.00193
-gap: n=6 p=['1/2', '21/50', '59/100', '41/100', '57/100', '7/10'] true 0.00474  best-linear 0.00368  prop-G 0.00133
+peeling: k-design D realisable -> {(6, 3, 'realisable'): 40, (7, 3, 'realisable'): 40, (7, 4, 'realisable'): 36, (8, 3, 'realisable'): 60, (8, 4, 'realisable'): 40, (8, 5, 'realisable'): 32, (9, 3, 'realisable'): 60, (9, 4, 'realisable'): 60, (9, 5, 'realisable'): 36, (9, 6, 'realisable'): 29, (10, 4, 'realisable'): 60, (10, 5, 'realisable'): 60}
+peeling: worst LP violation 0.00e+00
+peeling-twovalued: -> {'ok': 182726} min slack (I) -5.68e-14, (II) -6.75e-14

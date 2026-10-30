@@ -4,10 +4,12 @@
 
 Float HiGHS and random instances with fixed seeds: these are explorations, not proofs.
 Names: certainty-random, certainty-boundary, certainty-minimal, regimes, split,
-positivstellensatz, productform, scaled, twovalued, twovalued-reduced, gap, k2, decomp, kernels.
+positivstellensatz, productform, scaled, twovalued, twovalued-reduced, gap, k2, decomp, kernels,
+peeling, peeling-twovalued.
 """
 import itertools
 import math
+import random
 import sys
 from collections import Counter
 
@@ -401,10 +403,87 @@ def kernels():
     print("kernels n=8: not full ->", {K: d for K, d in bad.items() if d})
 
 
+def design_violation(n, k, pi, Pi):
+    """Least total L1 violation of the k-design moment equations (0 = a k-design exists)."""
+    subs = list(itertools.combinations(range(n), k))
+    rows = [[1.0] * len(subs)] + [[1.0 if i in T else 0.0 for T in subs] for i in range(n)] \
+        + [[1.0 if (i in T and j in T) else 0.0 for T in subs] for i, j in itertools.combinations(range(n), 2)]
+    rhs = [1.0] + list(pi) + [Pi[e] for e in itertools.combinations(range(n), 2)]
+    A = np.array(rows)
+    m = len(rhs)
+    res = linprog(np.concatenate([np.zeros(len(subs)), np.ones(2 * m)]),
+                  A_eq=np.hstack([A, np.eye(m), -np.eye(m)]), b_eq=np.array(rhs),
+                  bounds=(0, None), method="highs")
+    return res.fun
+
+
+def peeling():
+    """Proposition C5: at minimal points with 3 <= k <= n-3, is the k-design D of the peeling
+    L = (1-s) D + s R realisable? (five sampling modes for p, n = 6..10)."""
+    rng = random.Random(2026)
+    cnt, worst = Counter(), 0.0
+    for n, k in [(6, 3), (7, 3), (7, 4), (8, 3), (8, 4), (8, 5), (9, 3), (9, 4), (9, 5), (9, 6),
+                 (10, 4), (10, 5)]:
+        for beta in sorted({2, 3, max(2, n - k - 1)}):
+            for mode in ("uniform", "b-near-1", "b-small", "spiky", "two-class"):
+                for _ in range(4):
+                    alpha = n - beta
+                    for _ in range(100000):
+                        b = {"b-near-1": 1 - rng.random() ** 3 * 0.3,
+                             "b-small": k / (n - 1) + rng.random() * 0.1}.get(mode, rng.uniform(k / (n - 1), 0.999))
+                        rest = k - (beta - 1) * b
+                        if b >= 0.9999 or not 0 < rest < alpha * b:
+                            continue
+                        w = {"spiky": [rng.random() ** 6 for _ in range(alpha)],
+                             "two-class": [1.0 if i < alpha // 2 else 0.05 for i in range(alpha)]}.get(
+                            mode, [rng.random() for _ in range(alpha)])
+                        aA = [rest * t / sum(w) for t in w]
+                        if max(aA) < b * 0.9999:
+                            break
+                    else:
+                        continue
+                    p = [b] * beta + aA
+                    _, _, _, s, z = G.peeling_parameters(p, k)
+                    pi, Pi = G.peeling_design_moments(p, s, z)
+                    v = design_violation(n, k, pi, Pi)
+                    worst = max(worst, v)
+                    cnt[(n, k, "realisable" if v < 1e-7 else "NOT")] += 1
+    print("peeling: k-design D realisable ->", dict(cnt))
+    print("peeling: worst LP violation %.2e" % worst)
+
+
+def peeling_twovalued():
+    """Proposition C7: at two-valued minimal points (beta coordinates b, alpha coordinates a),
+    does the root s of Phi satisfy the 1-D conditions (I) and (II)?"""
+    rng = random.Random(7)
+    cnt = Counter()
+    worst = {"I": 9.0, "II": 9.0}
+    for _ in range(200000):
+        alpha, beta = rng.randint(1, 14), rng.randint(2, 14)
+        n = alpha + beta
+        k = rng.randint(1, n - 1)
+        lo_b, hi_b = k / (n - 1), min(0.9999, k / (beta - 1))
+        if lo_b >= hi_b:
+            continue
+        b = rng.uniform(lo_b, hi_b)
+        a = (k - (beta - 1) * b) / alpha
+        if not 0 <= a < b:
+            continue
+        _, _, _, s, _ = G.peeling_parameters([b] * beta + [a] * alpha, k)
+        L, U = max(0, k - alpha), min(k, beta)
+        e2, e1 = beta * (beta - 1) * b * b, beta * b                  # E B(B-1), E B under pairwise independence
+        two = min([e2 - 2 * j * e1 + j * (j + 1) - s * (beta - j) * (beta - j - 1) for j in range(L, U)] or [0.0])
+        one = -e2 + (L + U - 1) * e1 - L * U + s * (beta - L) * (beta - U)
+        worst["I"], worst["II"] = min(worst["I"], one), min(worst["II"], two)
+        cnt["ok" if min(one, two) >= -1e-9 else "FAIL"] += 1
+    print("peeling-twovalued: ->", dict(cnt), "min slack (I) %.2e, (II) %.2e" % (worst["I"], worst["II"]))
+
+
 RUNS = {"certainty-random": certainty_random, "certainty-boundary": certainty_boundary,
         "certainty-minimal": certainty_minimal, "regimes": regimes, "split": split,
         "positivstellensatz": positivstellensatz, "productform": productform, "scaled": scaled,
-        "twovalued": twovalued, "twovalued-reduced": twovalued_reduced, "gap": gap, "k2": k2, "decomp": decomp, "kernels": kernels}
+        "twovalued": twovalued, "twovalued-reduced": twovalued_reduced, "gap": gap, "k2": k2, "decomp": decomp,
+        "kernels": kernels, "peeling": peeling, "peeling-twovalued": peeling_twovalued}
 
 if __name__ == "__main__":
     names = sys.argv[1:] or ["all"]

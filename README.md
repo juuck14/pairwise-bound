@@ -55,7 +55,10 @@ VERDICT: PASS
 > **쌍별 독립에서 두 모멘트(Boros–Prékopa) 상한은 서로 다른 주변확률일 때 언제 정확하고, 왜 깨지는가?** (일반 n, k)
 
 지금까지 확보한 결과(증명: [`notes/proofs/exactness.md`](notes/proofs/exactness.md), 상태: claims C15–C25):
-- **확실성 판정:** P̄ = 1이면 모든 j에서 Σ_{l≠j} p_l ≥ k다(일반 증명). 역은 k ∈ {1, n−2, n−1, n}에서 증명했고, 일반 경우는 추측이다.
+- **확실성 판정:** P̄ = 1이면 모든 j에서 Σ_{l≠j} p_l ≥ k다(일반 증명).
+  - 역은 k ∈ {1, 2, n−2, n−1, n}에서 증명했다. 따라서 n ≤ 5는 전부 해결되었다.
+  - k = 2(2026-10-30)는 벗겨내기 구성으로 증명했다. 법칙을 "정확히 k개가 1인 설계"와 "최댓값 좌표가 모두 1인 쌍별 독립 법칙"의 혼합으로 쓴다.
+  - 3 ≤ k ≤ n−3은 그 설계의 존재(추측 D, 탐색 553점 모두 성립)로 환원되었고, 아직 추측이다.
 - **정확성의 장애:** 조건부 평균 E[S∣X_j] = 1 + Σ_{l≠j}p_l 또는 Σ_{l≠j}p_l에서 세 가지 장애가 나온다.
   - BP-최적 층과의 구간 불일치
   - 지지 {0,k,n}에서의 두 근 경직성
@@ -69,7 +72,7 @@ VERDICT: PASS
 
 ```bash
 python -m scripts.explain_rn_example        # R–N Example 3.2의 24칸 판정 (약 8초)
-python -m scripts.explore_exactness all     # 탐색 실행 (부동소수점, 약 100초)
+python -m scripts.explore_exactness all     # 탐색 실행 (부동소수점, 약 4분)
 ```
 
 ## 현재까지의 결과 (원래 2+3 문제)

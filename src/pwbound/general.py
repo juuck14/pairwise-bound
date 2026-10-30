@@ -303,6 +303,124 @@ def bp_exactness_verdict(p, k):
     return bp, "open", f"E2-E4 hold for support {K}"
 
 
+# ------------------------------------------------------------ certainty: the peeling law (exactness.md §2)
+
+def certainty_condition(p, k):
+    """Condition of Theorem C1: sum_{l != j} p_l >= k for every j with p_j < 1."""
+    p = as_fractions(p)
+    s1 = sum(p)
+    return all(s1 - x >= k for x in p if x < 1)
+
+
+def minimal_point_below(p, k):
+    """Reduction of Theorem C4's proof: drop coordinates equal to 1 (lowering k), lower a
+    unique maximum to the second largest value, then scale down until the leave-one-out sum
+    of a maximal coordinate is exactly the threshold.
+
+    Returns (kept, p_min, k_min): kept indices, a minimal point p_min <= p[kept] (at least
+    two coordinates equal to max(p_min), sum - max = k_min) and the reduced threshold.
+    Returns (kept, None, k_min) when the reduced problem is trivial (k_min <= 0) and None
+    when the certainty condition fails. Exact (Fraction).
+    """
+    p = as_fractions(p)
+    if not certainty_condition(p, k):
+        return None
+    kept = [i for i, x in enumerate(p) if x < 1]
+    k_min = k - (len(p) - len(kept))
+    if k_min <= 0:
+        return kept, None, k_min
+    q = sorted((p[i], i) for i in kept)
+    vals = [p[i] for i in kept]
+    top, second = q[-1][1], q[-2][1]
+    vals[kept.index(top)] = p[second]          # LOO of the old maximum is unchanged
+    b = max(vals)
+    t = Fraction(k_min) / (sum(vals) - b)      # sum(vals) - b >= k_min > 0 by the condition
+    return kept, [t * v for v in vals], k_min
+
+
+def peeling_y(s, b, a):
+    """Lemma P1: the root in [0,1] of (1 - y)(b - s y) = (1 - a)(b - a), for 0 < s <= b < 1."""
+    import math
+    rhs = (1 - a) * (b - a)
+    disc = (b + s) ** 2 - 4 * s * (b - rhs)
+    return ((b + s) - math.sqrt(disc)) / (2 * s)
+
+
+def peeling_parameters(p, k, iters=200):
+    """Float: (B, A, b, s, z) for a minimal point p with threshold k.
+
+    B = coordinates equal to b = max p, A = the others, s in (0, b^2] a root of
+    Phi(s) = sum_A y_s(a_i) - (k - |B| + b/s) (Lemma P2, bisection), z = 1 on B and
+    y_s(a_i) on A.
+    """
+    pf = [float(x) for x in p]
+    b = max(pf)
+    B = [i for i, x in enumerate(pf) if x == b]
+    A = [i for i, x in enumerate(pf) if x != b]
+
+    def phi(s):
+        return sum(peeling_y(s, b, pf[i]) for i in A) - (k - len(B) + b / s)
+
+    lo, hi = 0.0, b * b
+    assert phi(hi) >= -1e-12, "Phi(b^2) < 0: p is not a minimal point"
+    for _ in range(iters):
+        mid = (lo + hi) / 2
+        if phi(mid) >= 0:
+            hi = mid
+        else:
+            lo = mid
+    s = hi
+    z = [1.0 if i in B else peeling_y(s, b, pf[i]) for i in range(len(pf))]
+    return B, A, b, s, z
+
+
+def peeling_design_moments(p, s, z):
+    """First and second order inclusion probabilities of the k-design D in
+    L = (1-s) D + s R (Proposition C5): pi_l = (p_l - s z_l)/(1-s),
+    Pi_lt = (p_l p_t - s z_l z_t)/(1-s). Works with Fractions or floats."""
+    n = len(p)
+    pi = [(p[l] - s * z[l]) / (1 - s) for l in range(n)]
+    Pi = {(l, t): (p[l] * p[t] - s * z[l] * z[t]) / (1 - s) for l, t in combinations(range(n), 2)}
+    return pi, Pi
+
+
+def peeling_law_k2(p, s, z):
+    """Theorem C4: the law (1-s) D + s R with S >= 2 a.s., for threshold k = 2.
+
+    D puts mass Pi_lt on the 2-set {l,t}; R has X_l = 1 where z_l = 1 and the other
+    coordinates independent Bernoulli(z_l). Exact when p, s, z are Fractions satisfying
+    the equations of Lemmas P1-P2; returns a dict {0/1 tuple: mass}.
+    """
+    n = len(p)
+    _, Pi = peeling_design_moments(p, s, z)
+    law = {}
+    for (l, t), w in Pi.items():
+        if w:
+            x = tuple(1 if i in (l, t) else 0 for i in range(n))
+            law[x] = law.get(x, 0) + (1 - s) * w
+    free = [i for i in range(n) if z[i] != 1]
+    for bits in product((0, 1), repeat=len(free)):
+        x = [1] * n
+        w = s
+        for i, bit in zip(free, bits):
+            x[i] = bit
+            w = w * (z[i] if bit else 1 - z[i])
+        if w:
+            law[tuple(x)] = law.get(tuple(x), 0) + w
+    return law
+
+
+def two_valued_k2_instance(alpha, b):
+    """Exact instance of Theorem C4 with |B| = 2 and alpha equal coordinates a < b:
+    a = (2 - b)/alpha, y = 1 - alpha (1-a)(b-a) / (b (alpha-1)), s = b / (alpha y).
+    Returns (p, s, z) with Fractions (valid for 2/(alpha+1) < b < 1)."""
+    b = Fraction(b)
+    a = (2 - b) / alpha
+    y = 1 - alpha * (1 - a) * (b - a) / (b * (alpha - 1))
+    s = b / (alpha * y)
+    return [b, b] + [a] * alpha, s, [Fraction(1)] * 2 + [y] * alpha
+
+
 # ------------------------------------------------------------ float LP (exploration only)
 
 _STRUCT = {}
