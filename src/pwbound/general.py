@@ -410,6 +410,23 @@ def peeling_law_k2(p, s, z):
     return law
 
 
+def two_valued_peeling_s(alpha, beta, k, b):
+    """Theorem C8 (float): at the two-valued minimal point (beta coordinates b, alpha
+    coordinates a = (k - (beta-1) b)/alpha) the peeling parameter is s* = b/u_+, where u_+
+    is the largest root of G(u) = b(n-k-u)((alpha-1)u - (k-beta)) - alpha^2 (1-a)(b-a) u."""
+    import math
+    n = alpha + beta
+    a = (k - (beta - 1) * b) / alpha
+    c = alpha ** 2 * (1 - a) * (b - a)
+    q2 = -b * (alpha - 1)
+    q1 = b * ((n - k) * (alpha - 1) + (k - beta)) - c
+    q0 = -b * (n - k) * (k - beta)
+    if q2 == 0:
+        return b / (-q0 / q1)
+    disc = math.sqrt(q1 * q1 - 4 * q2 * q0)
+    return b / max((-q1 + disc) / (2 * q2), (-q1 - disc) / (2 * q2))
+
+
 def two_valued_k2_instance(alpha, b):
     """Exact instance of Theorem C4 with |B| = 2 and alpha equal coordinates a < b:
     a = (2 - b)/alpha, y = 1 - alpha (1-a)(b-a) / (b (alpha-1)), s = b / (alpha y).

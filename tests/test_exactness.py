@@ -435,6 +435,114 @@ def test_two_valued_design_window_float():
     assert checked > 1500
 
 
+def _two_valued_symbols():
+    import sympy as sp
+    al, be, k, j, b = sp.symbols("alpha beta k j b")
+    n = al + be
+    x = be * b
+    e = (x - j) * (x - j - 1) + x * (1 - b)               # E_pi[(B-j)(B-j-1)]
+    d = (be - j) * (be - j - 1)
+    c = (al - k + (be - 1) * b) * ((n - 1) * b - k)      # alpha^2 (1-a)(b-a)
+    H = sp.expand((e * (n - k) - b * d) * ((al - 1) * b * d - (k - be) * e) - c * d * e)
+    return sp, (al, be, k, j, b), (n, x, e, d, c, H)
+
+
+def test_two_valued_sign_transfer_identity():
+    """Theorem C8, Lemma T1: f_s(Y) - f_s(y) = (y - Y)((b+s) - s(y+Y)) and, with u = b/s,
+    Y = (k - beta + u)/alpha, a = (k - (beta-1) b)/alpha: f_s(Y) - f_1(a) = G(u)/(alpha^2 u)."""
+    import sympy as sp
+    al, be, k, b, u, y, Yv, s = sp.symbols("alpha beta k b u y Y s")
+    f = lambda t, ss: (1 - t) * (b - ss * t)
+    assert sp.expand(f(Yv, s) - f(y, s) - (y - Yv) * ((b + s) - s * (y + Yv))) == 0
+    n = al + be
+    a = (k - (be - 1) * b) / al
+    Y = (k - be + u) / al
+    G = b * (n - k - u) * ((al - 1) * u - (k - be)) - al ** 2 * (1 - a) * (b - a) * u
+    assert sp.simplify(f(Y, b / u) - f(a, 1) - G / (al ** 2 * u)) == 0
+
+
+def test_two_valued_window_identities():
+    """Theorem C8, Lemmas T3-T5: exact polynomial identities behind the window proof."""
+    sp, (al, be, k, j, b), (n, x, e, d, c, H) = _two_valued_symbols()
+    m = (be - 1) * b
+    # T3: s_j - s_{j+1} = 2 beta (1-b)(m - j - 1) / ((beta-j)(beta-j-1)(beta-j-2))
+    e1 = e.subs(j, j + 1)
+    assert sp.expand(e * (be - j - 2) - e1 * (be - j) - 2 * be * (1 - b) * (m - j - 1)) == 0
+    # s_0 = b^2
+    assert sp.simplify(e.subs(j, 0) / d.subs(j, 0) - b ** 2) == 0
+    # T4, top index j = k-1
+    assert sp.expand(H.subs(j, k - 1) + be * (al - 1) * (b - 1) ** 2 * (k - be) * (k - 1) * (m - k) ** 2) == 0
+    # T4, value at alpha = k - j
+    assert sp.expand(H.subs(al, k - j) - be * (b - 1) * (j - be) * (j - k + 1) * (m - j) ** 2
+                     * ((j + 1) * (1 + b) - 2 * be * b)) == 0
+    # T4, slope: H = -beta (b-1)(alpha Q1 + Q0), Q1 = K A1 + A0 with K = k - m
+    Q = sp.expand(sp.cancel(H / (-be * (b - 1))))
+    assert sp.degree(Q, al) == 1
+    Q1 = Q.coeff(al, 1)
+    K = sp.Symbol("K")
+    T0 = (1 + b) * (be * m + j * (j + 1)) - 4 * be * b * j
+    T1 = x * (m - 2 * j) + j * (j + 1)
+    A1 = (m + be - 2 * j - 1) * T1
+    A0 = (m - j) * (m - j - 1) * T0
+    assert sp.expand(Q1.subs(k, K + m) - (K * A1 + A0)) == 0
+    # A1 + A0 > 0: with j = 1 + i, beta = j + 2 + g, m = j + t (i, g >= 0, 0 < t <= 1)
+    i_, g_, t_ = sp.symbols("i g t", nonnegative=True)
+    sub = {j: 1 + i_, be: 3 + i_ + g_, b: (1 + i_ + t_) / (2 + i_ + g_)}
+    num = sp.factor(sp.together((A1 + A0).subs(sub)))
+    target = ((i_ + 1) * (g_ + 1) * ((g_ + 1) - (g_ + 2) * t_ + (g_ + 4) * t_ ** 2)
+              + (g_ + 1) * (g_ + 2) * t_ ** 3 + (g_ + i_ + 3) * t_ ** 4) / (2 + i_ + g_)
+    assert sp.simplify(num - target) == 0
+    assert sp.expand((g_ + 2) ** 2 - 4 * (g_ + 1) * (g_ + 4) + 3 * g_ ** 2 + 16 * g_ + 12) == 0
+    # T5, lower end (k < beta): G(b / W_lo) numerators for L = 0 and L = k - alpha
+    for L, expected in [(0, b * be ** 2 * (b - 1) * (k - be) * (k - 1) * (m - k) * (al + m - k)),
+                        (k - al, -b * be * (al - 1) * (b - 1) * (k - be) * (k - al - be) * (m - k) * (al + m - k))]:
+        E = -be * (be - 1) * b ** 2 + (L + k - 1) * x - L * k
+        num, den = -E, (be - L) * (be - k)
+        Hl = sp.expand((num * (n - k) - b * den) * ((al - 1) * b * den - (k - be) * num) - c * den * num)
+        assert sp.expand(Hl - expected) == 0
+        # W_lo <= b^2  <=>  V >= 0
+        V = b ** 2 * (be - L) * (be - k) + E
+        assert sp.expand(V - (1 - b) * (b * be * (L + k - 1) - L * k * (1 + b))) == 0
+
+
+def test_two_valued_theorem_float():
+    """Theorem C8 (float): s* = b/u_+ lies in [W_lo, s_{j*}], alpha >= k - j*, and the
+    symmetric k-design exists (1-D LP), at random two-valued minimal points."""
+    import math
+    import numpy as np
+    from scipy.optimize import linprog
+    rng = random.Random(34)
+    checked = 0
+    for _ in range(3000):
+        alpha, beta = rng.randint(1, 15), rng.randint(2, 15)
+        n = alpha + beta
+        k = rng.randint(1, n - 1)
+        lo_b, hi_b = k / (n - 1), min(0.999999, k / (beta - 1))
+        if lo_b >= hi_b:
+            continue
+        b = rng.uniform(lo_b, hi_b)
+        s = G.two_valued_peeling_s(alpha, beta, k, b)
+        a = (k - (beta - 1) * b) / alpha
+        _, _, _, s_bis, _ = G.peeling_parameters([b] * beta + [a] * alpha, k)
+        assert abs(s - s_bis) < 1e-9 * max(1, s)
+        m, x = (beta - 1) * b, beta * b
+        jstar = math.ceil(m - 1e-15) - 1
+        sj = ((x - jstar) * (x - jstar - 1) + x * (1 - b)) / ((beta - jstar) * (beta - jstar - 1))
+        L = max(0, k - alpha)
+        assert alpha >= k - jstar and s <= b * b * (1 + 1e-12) and s <= sj * (1 + 1e-9)
+        if k < beta:
+            E = -beta * (beta - 1) * b * b + (L + k - 1) * x - L * k
+            assert -E / ((beta - L) * (beta - k)) <= s * (1 + 1e-9) + 1e-15
+        sup = list(range(L, min(k, beta) + 1))
+        mu, nu = beta * (b - s) / (1 - s), beta * (beta - 1) * (b * b - s) / (1 - s)
+        res = linprog(np.zeros(len(sup)), A_eq=np.array([[1.0] * len(sup), [float(v) for v in sup],
+                                                           [float(v * (v - 1)) for v in sup]]),
+                      b_eq=np.array([1.0, mu, nu]), bounds=(0, None), method="highs")
+        assert res.status == 0
+        checked += 1
+    assert checked > 1500
+
+
 def test_rn_example_3_2_verdicts():
     """Every BP cell of R-N Example 3.2 is decided with an exact certificate."""
     from scripts.explain_rn_example import analyse
