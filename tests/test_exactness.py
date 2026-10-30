@@ -543,6 +543,100 @@ def test_two_valued_theorem_float():
     assert checked > 1500
 
 
+def test_peeling_root_concavity_lemmas():
+    """Proposition C10: (a) in u = b/s, y = [(1+u) - sqrt((1+u)^2 - 4cu)]/2 with
+    c = 1 - (1-a)(b-a)/b solves the curve equation, and the radicand has discriminant
+    16c(c-1) <= 0 (so y is concave in u); (b) y_s(a) is concave in a for s <= b^2 (float)."""
+    import sympy as sp
+    a, b, u, y = sp.symbols("a b u y", positive=True)
+    c = 1 - (1 - a) * (b - a) / b
+    root = ((1 + u) - sp.sqrt((1 + u) ** 2 - 4 * c * u)) / 2
+    curve = (1 - y) * (b - (b / u) * y) - (1 - a) * (b - a)
+    assert sp.simplify(curve.subs(y, root)) == 0
+    cc = sp.Symbol("cc")
+    rad = sp.Poly(sp.expand((1 + u) ** 2 - 4 * cc * u), u)
+    assert sp.expand(rad.discriminant() - 16 * cc * (cc - 1)) == 0
+    rng = random.Random(35)
+    for _ in range(2000):
+        bb = rng.uniform(0.05, 0.99)
+        s = bb * bb * rng.uniform(0.01, 1)
+        a1, a2 = sorted(rng.uniform(0, bb) for _ in range(2))
+        mid = (a1 + a2) / 2
+        assert G.peeling_y(s, bb, mid) >= (G.peeling_y(s, bb, a1) + G.peeling_y(s, bb, a2)) / 2 - 1e-12
+
+
+def _general_minimal_point(rng, n, k, beta):
+    alpha = n - beta
+    for _ in range(1000):
+        b = rng.uniform(k / (n - 1), min(0.999, k / (beta - 1)))
+        rest = k - (beta - 1) * b
+        if not 0 < rest < alpha * b:
+            continue
+        w = [rng.random() ** rng.choice([1, 2, 4]) for _ in range(alpha)]
+        aA = [rest * t / sum(w) for t in w]
+        if max(aA) < b * 0.9999:
+            return b, aA
+    return None
+
+
+def test_bcount_window_at_general_minimal_points_float():
+    """Proposition C10 (float): at general minimal points the peeling root s satisfies
+    W_lo <= s <= min_j s_j, sandwiched between the equal-split and extreme-vertex two-valued
+    roots (Jensen for the concave y_s)."""
+    import math
+    rng = random.Random(36)
+    checked = 0
+    for _ in range(600):
+        n = rng.randint(5, 14)
+        k = rng.randint(2, n - 2)
+        beta = rng.randint(2, n - 1)
+        g = _general_minimal_point(rng, n, k, beta)
+        if g is None:
+            continue
+        b, aA = g
+        alpha = n - beta
+        _, _, _, s, _ = G.peeling_parameters([b] * beta + aA, k)
+        KA = sum(aA)
+        s_tv = G.two_valued_peeling_s(alpha, beta, k, b)          # equal split
+        q = math.floor(KA / b)
+        r = KA - q * b
+        s_ext = (b / (beta + q - k)) if r <= 1e-12 else G.two_valued_peeling_s(1, beta + q, k, b)
+        assert s_tv - 1e-9 <= s <= s_ext + 1e-9
+        m, x = (beta - 1) * b, beta * b
+        s_min = min(((x - j) * (x - j - 1) + x * (1 - b)) / ((beta - j) * (beta - j - 1)) for j in range(beta - 1))
+        assert s <= s_min * (1 + 1e-9)
+        L = max(0, k - alpha)
+        if k < beta:
+            E = -beta * (beta - 1) * b * b + (L + k - 1) * x - L * k
+            assert -E / ((beta - L) * (beta - k)) <= s * (1 + 1e-9) + 1e-15
+        checked += 1
+    assert checked > 250
+
+
+def test_three_coordinate_tail_design_float():
+    """Theorem C11 (float): when |A| = 3 the design reduces to a law on {0,1}^3 with the
+    A-moments of D; its COR(3) inequalities hold and the law exists (exact 1-parameter form)."""
+    rng = random.Random(37)
+    checked = 0
+    for _ in range(3000):
+        beta = rng.randint(3, 10)
+        n, k = beta + 3, rng.randint(3, beta)
+        g = _general_minimal_point(rng, n, k, beta)
+        if g is None:
+            continue
+        b, a = g
+        _, _, _, s, z = G.peeling_parameters([b] * beta + a, k)
+        y = z[beta:]
+        pi = [(a[i] - s * y[i]) / (1 - s) for i in range(3)]
+        Pi = {(i, j): (a[i] * a[j] - s * y[i] * y[j]) / (1 - s) for i, j in combinations(range(3), 2)}
+        P = lambda i, j: Pi[tuple(sorted((i, j)))]
+        lo = max([0.0] + [P(i, j) + P(i, l) - pi[i] for i, j, l in [(0, 1, 2), (1, 0, 2), (2, 0, 1)]])
+        hi = min([P(0, 1), P(0, 2), P(1, 2), 1 - sum(pi) + sum(Pi.values())])
+        assert lo <= hi + 1e-12                              # t = P(all three) exists
+        checked += 1
+    assert checked > 1500
+
+
 def test_rn_example_3_2_verdicts():
     """Every BP cell of R-N Example 3.2 is decided with an exact certificate."""
     from scripts.explain_rn_example import analyse
