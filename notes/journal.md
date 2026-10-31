@@ -301,3 +301,22 @@
 - |T′| = 2까지 일반화했다. 로그 미분이 1/s − 2/(b+s) ≥ 0이기 때문이다. |T′| ≥ 3은 이 단조성 논법이 깨질 수 있다(b < 2s일 때).
 - 테스트 `test_block_chords_with_one_extra_coordinate_float`를 추가했다(부동소수점, 단조성 + 현 부등식).
 - n = 6, k = 3, β = 2에서 남은 것은 2+2 분할 면 하나다. 모멘트 꼴은 δ_a² + (1−s)(b²−s)/s ≥ s δ_y²이다. 이번 세션에서는 증명하지 못했다.
+
+### J26. 11/1 제출 정리와 깨끗한 클론 재현 (2026-10-31)
+- 계기: 사람이 "지금까지 내용을 바탕으로 11/1 제출할 내용 정리해봐"라고 요청했다.
+- 깨끗한 클론은 커밋 c0e65ad에서 시작했다. Python 3.13.17, `python3 -m venv` → `pip install -r requirements.txt` 순서로 제출 안내의 명령을 그대로 실행했다.
+  - 설치: 약 32초
+  - `python -m scripts.demo`: 약 0.8초. 출력이 `results/demo_output.txt`와 바이트 단위로 같았다(diff 없음).
+  - `python -m scripts.demo --p 1/5 --q 1/2`: M = 139/300(조각 V02), 28/28 PASS.
+  - `python -I verifier/verify.py results/certificates/p2_5-q3_5.json`과 `results/regions/region_certificate.json`: 둘 다 PASS.
+  - `python -m scripts.classify`: 10.7초, 54/54 PASS, 추적 파일 변화 없음.
+  - `plot_regions` 8.3초, `plot_slice` 1.3초, `explain_rn_example` 22.0초.
+  - `explore_exactness peeling facets-a4`: 13.9초.
+  - `pytest`: 1,042개 모두 통과, 64초. 10/30 새 정리 테스트 18개는 12.6초.
+- Python 3.11.17(numpy 2.4.6, scipy 1.17.1)과 3.12.3(numpy 2.5.4, scipy 1.18.1)에서도 각각 깨끗한 클론과 새 venv로 확인했다.
+  - 데모 28/28 PASS.
+  - 1,042 passed(101.9초, 77.7초). 두 실행을 동시에 돌려 시간이 늘었다.
+- `SUBMISSION.md`를 다시 정리했다.
+  - 데모 설명은 유지했다.
+  - §4에 연구 확장과 10/29–10/30 결과를 상태 표시와 함께 넣었다.
+  - §5 측정 시간, §6 문서 안내, §7 한계를 갱신했다.

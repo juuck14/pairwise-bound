@@ -1,8 +1,22 @@
 # 11/1 데모 제출 안내
 
-KAIST 「인공지능기반수학발견」 개인 Math Research 과제의 데모 코드다.
+KAIST 「인공지능기반수학발견」 개인 Math Research 과제의 데모 코드와 현재까지의 연구 결과를 정리한 문서다.
 
-## 무엇을 보여 주는가
+- 저장소: https://github.com/juuck14/pairwise-bound
+- 제출 기준: `main` 브랜치의 최신 커밋(태그를 만들지 못한 이유는 §7)
+- 한 줄 요약: 쌍별 독립인 0/1 변수들의 합이 k 이상일 확률의 최댓값을, 정확한 분수와 스스로 검증되는 증서로 계산한다. 데모는 원래 문제(변수 5개, 2+3 그룹)를 보여 준다. 연구는 일반 n, k로 넓혀 새 정리를 몇 개 얻었다.
+
+## 0. 한눈에 보기
+
+| 항목 | 내용 | 상태 |
+|---|---|---|
+| 데모 | `python -m scripts.demo`: 2+3 문제의 최댓값, 달성분포, 상한 증서, 독립 검증 | 깨끗한 클론에서 재현 확인(10/31) |
+| 원래 문제 | M(2/5,3/5) = 61/75. 0 ≤ p ≤ q ≤ 1 전체에서 11개 조각의 이차식 | 독립 검증기 PASS(28/28, 54/54) |
+| 질문 확장(10/29) | "사례 계산에 그친다"는 재평가에 따라 일반 n, k에서 "두 모멘트 상한이 언제 정확한가"로 넓힘 | `notes/research_reassessment.md` |
+| 새 정리(10/29–10/30) | 확실성 판정(최댓값 = 1인 조건)을 k = 2, 두 값 주변확률, "최댓값보다 작은 좌표가 셋 이하"인 경우에 증명. 정확성의 필요조건, SSS 항의 필요충분조건 등 | 증명(AI 작성, 사람 검토 전), 테스트 통과 |
+| 남은 문제 | 확실성 판정의 일반 경우(첫 미해결 사례 n = 6, k = 3) | 추측, 수치 근거 |
+
+## 1. 데모가 보여 주는 것
 
 X1, …, X5 ∈ {0,1}이 다음 조건을 만족한다.
 - P(X1=1)=P(X2=1)=p, P(X3=1)=P(X4=1)=P(X5=1)=q
@@ -18,7 +32,7 @@ M(p,q) = max P(X1+…+X5 ≥ 3)
 
 대표 사례 p=2/5, q=3/5의 결과는 **61/75**다.
 
-## 실행 방법
+## 2. 실행 방법
 
 필요한 것: Python 3.11 이상(3.11, 3.12, 3.13에서 확인), CPU만 사용. 네트워크 접속과 LLM API 호출은 없다.
 
@@ -45,9 +59,10 @@ python -m scripts.demo
 python -m scripts.demo --p 1/5 --q 1/2
 ```
 
-실행하지 않고 볼 수 있도록 대표 사례의 출력을 [`results/demo_output.txt`](results/demo_output.txt)에 저장해 두었다.
+- 이 환경에서 잰 시간(10/31, 깨끗한 클론): 설치 약 32초, 데모 약 1초.
+- 실행하지 않고 볼 수 있도록 대표 사례의 출력을 [`results/demo_output.txt`](results/demo_output.txt)에 저장해 두었다. 10/31에 깨끗한 클론에서 다시 실행한 출력과 바이트 단위로 같았다.
 
-## 출력 읽는 법 (대표 사례)
+## 3. 출력 읽는 법 (대표 사례)
 
 | 출력 절 | 내용 |
 |---|---|
@@ -68,32 +83,89 @@ python -m scripts.demo --p 1/5 --q 1/2
 
 명세는 [`verifier/SPEC.md`](verifier/SPEC.md)에 있다.
 
-## 추가로 실행해 볼 수 있는 것
+## 4. 연구 진행 상황
 
-| 명령 | 내용 | 이 환경에서 잰 시간 |
-|---|---|---|
-| `python -m scripts.demo` | 대표 사례 데모 | 약 1초 |
-| `python -I verifier/verify.py results/certificates/p2_5-q3_5.json` | 저장된 증서만 독립 검증 | 1초 미만 |
-| `python -m scripts.classify` | 0≤p≤q≤1 전체의 조각 분류 증서 생성 + 검증(54개 검사) | 약 10초 |
-| `python -m scripts.plot_regions` | 조각 지도 그림 | 약 8초 |
-| `python -m scripts.plot_slice` | q=3/5 단면 비교 그림 | 약 4초 |
-| `pytest` | 전체 테스트 1000개 | 18–25초 |
-
-## 현재까지의 결과 요약
+### 4.1 원래 문제(2+3)의 결과
 
 | 결과 | 상태 |
 |---|---|
 | M(2/5,3/5) = 61/75 | 독립 검증기 PASS |
-| 32상태 문제 ⇔ 12상태 (A,B) 문제 (그룹 내부 순열 평균화) | 증명 |
+| 32상태 문제 ⇔ 12상태 (A,B) 문제(그룹 내부 순열 평균화) | 증명 |
 | 0≤p≤q≤1에서 M(p,q)는 11개 조각으로 나뉜 조각별 이차식이다. 조각마다 공식, 영역(이차 부등식), 달성분포(다항식)를 구했다 | 컴퓨터 보조 증명, 독립 검증기 54/54 PASS |
-| 기존 상한(Ramachandra–Natarajan) 중 가장 강한 BP형은 11개 중 3개 조각(V02, V16, V18)에서만 정확하다. SSS형은 2개(V02, V18), Chebyshev형은 1개(V18) 조각에서만 정확하다 (2026-10-29 정정, `notes/claims.md` C9) | 컴퓨터 보조 증명 |
+| 기존 상한(Ramachandra–Natarajan, 이하 R–N) 중 가장 강한 BP형은 11개 중 3개 조각(V02, V16, V18)에서만 정확하다. SSS형은 2개(V02, V18), Chebyshev형은 1개(V18) 조각에서만 정확하다(10/29 정정, `notes/claims.md` C9) | 컴퓨터 보조 증명 |
 | p와 q를 바꾸면 값이 달라진다: M(3/5,2/5) = 19/25 | 정확 계산 |
 
-> 2026-10-29 연구 방향 재평가: 위 결과는 표준 도구로 한 사례를 정확히 푼 것이라는 평가에 따라, 연구 질문을 "두 모멘트 상한이 서로 다른 주변확률에서 언제 정확한가(일반 n, k)"로 바꿨다. 데모 자체는 그대로 유효하다. 새 결과는 [`notes/research_reassessment.md`](notes/research_reassessment.md)와 [`notes/proofs/exactness.md`](notes/proofs/exactness.md)에 있다.
+### 4.2 질문을 넓힌 이유(10/29)
 
-자세한 내용과 근거 파일은 [`README.md`](README.md), [`notes/claims.md`](notes/claims.md), [`notes/proofs/theorem_AB.md`](notes/proofs/theorem_AB.md), [`results/regions/REGIONS.md`](results/regions/REGIONS.md)에 있다.
+- 원래 문제의 풀이는 LP 쌍대, 대칭화, 매개변수 LP라는 표준 도구를 한 사례에 적용한 것이다. 독립 재평가에서 "사례 계산에 그친다"는 우려가 타당하다고 판단했다(`notes/research_reassessment.md`).
+- 그래서 질문을 다음과 같이 넓혔다.
+  - 서로 다른 주변확률 p에서 Boros–Prékopa(BP) 두 모멘트 상한은 언제 정확하고, 왜 깨지는가?
+  - 그 특수경우로, 최댓값이 1이 되는(S ≥ k가 확실한) p는 정확히 무엇인가?
+- 표기: P̄(n,k,p) = max P(S ≥ k)(p를 주변확률로 갖는 쌍별 독립 법칙 전체에서의 최댓값), LOO_j = Σ_{l≠j} p_l.
 
-## 알려진 한계
+### 4.3 새 결과(일반 n, k)
+
+"증명"으로 표시한 것은 `notes/proofs/exactness.md`에 증명을 썼고, 핵심 항등식과 사례를 테스트로 확인한 것이다. 증명은 AI가 썼으며, **사람의 검토는 아직 하지 않았다.**
+
+| 결과 | 상태 | 확인 방법 |
+|---|---|---|
+| **확실성 판정의 필요조건:** P̄ = 1이면 p_j < 1인 모든 j에 대해 LOO_j ≥ k(모든 n, k) | 증명 | exactness §2 |
+| **역(충분조건), k = 2:** 모든 n에서 P̄(n,2,p) = 1 ⇔ 위 조건 | 증명(10/30, 정리 C4) | `pytest tests/test_exactness.py -k "c4 or peeling"`(정확한 유리수 사례 6개 포함) |
+| **역, 주변확률이 두 값뿐일 때:** 모든 n, k | 증명(10/30, 정리 C8) | `... -k two_valued`(sympy 항등식 포함) |
+| **역, 최댓값보다 작은 좌표가 셋 이하일 때:** 모든 n, k | 증명(10/30, 정리 C11) | `... -k "concavity or bcount or three_coordinate or block_chords"` |
+| 역, k ∈ {1, n−2, n−1, n}과 동일 주변확률 | 증명(k=1·동일 주변확률은 R–N 재현, k=n−2는 10/29 명시적 구성) | `... -k top2` |
+| 역의 일반 경우(추측 C) | 추측 | 부동소수점 LP 4,000점 이상에서 불일치 0(수치 허용오차로 1로 보인 155점 제외). 남은 경우를 환원한 설계 존재 문제는 553점 모두 성립 |
+| BP 정확성의 필요조건 E2–E5와, 이것들이 충분하지 않다는 반례 2개 | 증명 / 정확 계산 | exactness §3, §6 |
+| 정리 S: SSS 이차항 S₂/C(k,2)가 정확할 필요충분조건 | 증명(동일 주변확률이면 R–N Prop. 4.3(b) 재현) | exactness §4 |
+| 동일 주변확률 근방의 국소 이분법(보조정리 L1, 정리 L) | 증명(L1의 인용은 사람 검토 필요) | exactness §5 |
+| 명제 G: BP 오차의 하한(이질성에 1차로 비례) | 증명 | exactness §3 |
+| R–N Example 3.2(n=12) 24칸의 정확/비정확 설명 | 정확 계산 | `python -m scripts.explain_rn_example` |
+
+확실성 판정 증명의 핵심 아이디어:
+- 경계에 있는 p(최소점)에서 법칙을 두 부분의 혼합으로 찾는다.
+  - "정확히 k개가 1인 설계"
+  - "최댓값 좌표가 모두 1인 쌍별 독립 법칙"
+- 혼합 비율은 방정식 하나로 정해진다.
+- 부등식 y ≤ a/√s 하나로 설계의 모든 2×2 표가 음이 아님을 보인다.
+- k = 2에서는 이것으로 증명이 끝난다. 일반 k에서는 "그 설계가 존재한다"는 것만 남는다.
+
+### 4.4 남은 문제
+
+- **확실성 판정의 일반 경우.** 첫 미해결 사례는 n = 6, k = 3이다. 최댓값 좌표가 2개이고 나머지 네 좌표가 두 가지 이상의 값을 갖는 경우다. 이 사례에서는 부등식 하나(2+2 분할 면)만 남았고, 수치로는 성립한다.
+- **신규성.** R–N(arXiv:2006.00516 v6) 원문 범위에서는 위 확실성 결과가 다뤄지지 않았음을 확인했다. Boros–Prékopa(1989) 등 다른 원문은 네트워크 제한으로 확인하지 못해 신규성을 확정하지 않는다.
+- 다음 계획: [`notes/HANDOFF.md`](notes/HANDOFF.md)
+
+## 5. 추가로 실행해 볼 수 있는 것
+
+10/31 깨끗한 클론(Python 3.13)에서 잰 시간이다.
+
+| 명령 | 내용 | 시간 |
+|---|---|---|
+| `python -m scripts.demo` | 대표 사례 데모 | 약 1초 |
+| `python -m scripts.demo --p 1/5 --q 1/2` | 다른 입력(M = 139/300) | 약 1초 |
+| `python -I verifier/verify.py results/certificates/p2_5-q3_5.json` | 저장된 증서만 독립 검증(28개 검사) | 1초 미만 |
+| `python -m scripts.classify` | 0≤p≤q≤1 전체의 조각 분류 증서 생성 + 검증(54개 검사) | 약 11초 |
+| `python -m scripts.plot_regions` | 조각 지도 그림 | 약 8초 |
+| `python -m scripts.plot_slice` | q=3/5 단면 비교 그림 | 약 1초 |
+| `python -m scripts.explain_rn_example` | R–N Example 3.2의 24칸 판정(정확한 분수) | 약 22초 |
+| `pytest tests/test_exactness.py -k "c4 or peeling or two_valued or concavity or bcount or three_coordinate or block_chords"` | 10/30 새 정리의 테스트 18개 | 약 13초 |
+| `pytest` | 전체 테스트 1,042개 | 약 64초 |
+| `python -m scripts.explore_exactness all` | 탐색 실행 전체(부동소수점, 증명 아님) | 약 4분(10/30 측정) |
+
+## 6. 문서 안내
+
+| 문서 | 내용 |
+|---|---|
+| [`README.md`](README.md) | 저장소 개요, 결과 요약, 구조 |
+| [`notes/research_reassessment.md`](notes/research_reassessment.md) | 재평가, 후보 질문 비교, 선택 이유, 결과 상태 |
+| [`notes/proofs/`](notes/proofs/) | 증명: `reduction.md`(축소), `theorem_AB.md`(2+3 분류), `exactness.md`(일반 n, k) |
+| [`notes/claims.md`](notes/claims.md) | 주장별 상태(증명 / 정확 계산 / 탐색 / 추측)와 근거 |
+| [`notes/journal.md`](notes/journal.md) | 실행한 명령, 결과, 실패 기록 |
+| [`notes/ai_log.md`](notes/ai_log.md) | AI 상호작용 기록 |
+| [`notes/HANDOFF.md`](notes/HANDOFF.md) | 다음 할 일 |
+| [`verifier/SPEC.md`](verifier/SPEC.md) | 독립 검증기 명세 |
+
+## 7. 알려진 한계
 
 - 최적화 코드와 검증기를 같은 AI 도구로 작성했다. 이를 보완하려고 다음 장치를 두었다.
   - 검증기 명세를 코드보다 먼저 쓰고 사람이 검토했다.
@@ -101,4 +173,9 @@ python -m scripts.demo --p 1/5 --q 1/2
   - 변조한 증서가 실패하는지 확인하는 음성 테스트를 두었다.
   - 별도 부동소수점 해법(HiGHS)과 교차확인했다.
 - 조각 경계 교점표(`results/regions/JUNCTIONS.md`)에서 좌표는 정확하다. 하지만 목록이 빠짐없는지는 수치 표본으로 판정했다.
-- 선행연구 검색 범위 안에서는 같은 결과를 찾지 못했다. 다만 인용 데이터베이스 전체를 확인하지는 못했으므로 신규성을 확정하지 않았다(`notes/literature.md`).
+- 10/29 이후의 정리(`notes/proofs/exactness.md`)는 AI가 쓴 증명이고 사람 검토 전이다.
+  - 핵심 항등식(인수분해, 양의 다항식 표현)은 sympy 테스트로, 결론은 정확한 유리수 사례와 부동소수점 사례로 확인했다.
+  - 논증 전체를 기계로 검증한 것은 아니다.
+- 일반 n의 탐색(`scripts/explore_exactness.py`)은 부동소수점 LP이며 증명이 아니다.
+- 신규성: 선행연구 원문은 R–N 외에는 대부분 확인하지 못했다(네트워크 제한, `notes/research_reassessment.md` §3). 그래서 신규성을 확정하지 않았다.
+- 제출 태그: 이 작업 환경의 git 프록시가 태그 push를 받지 않았다(`notes/journal.md` J17). 그래서 제출 기준은 `main`의 최신 커밋이다. 태그가 필요하면 GitHub에서 직접 만든다.
