@@ -14,7 +14,7 @@ from fractions import Fraction
 from itertools import combinations, product
 from math import comb
 
-from .rational import rank
+from .rational import nullspace, rank
 
 
 def as_fractions(p):
@@ -436,6 +436,42 @@ def two_valued_k2_instance(alpha, b):
     y = 1 - alpha * (1 - a) * (b - a) / (b * (alpha - 1))
     s = b / (alpha * y)
     return [b, b] + [a] * alpha, s, [Fraction(1)] * 2 + [y] * alpha
+
+
+def range_cor_facets(m, lo, hi):
+    """Exact facets of the size-restricted correlation polytope used in Proposition C9:
+    conv{(x_1..x_m, (x_i x_j)_{i<j}) : x in {0,1}^m, lo <= |x| <= hi}.
+
+    Every facet contains d affinely independent vertices (d = dimension), so enumerating all
+    d-subsets of vertices whose affine hull is a hyperplane with every vertex on one side
+    finds them all. Returns (d, facets); a facet is a tuple of coprime integers
+    (c_1..c_m, (c_ij)_{i<j}, c_0) with c.phi(x) + c_0 >= 0 on the polytope. Small m only.
+    """
+    from math import gcd
+    pairs = list(combinations(range(m), 2))
+    verts = [[Fraction(v) for v in list(x) + [x[i] * x[j] for i, j in pairs]]
+             for x in product((0, 1), repeat=m) if lo <= sum(x) <= hi]
+    d = rank([v + [1] for v in verts]) - 1
+    facets = set()
+    for sub in combinations(range(len(verts)), d):
+        basis = nullspace([verts[i] + [1] for i in sub])
+        if len(basis) != 1:
+            continue
+        w = basis[0]
+        den = 1
+        for t in w:
+            den = den * t.denominator // gcd(den, t.denominator)
+        w = [int(t * den) for t in w]
+        g = 0
+        for t in w:
+            g = gcd(g, abs(t))
+        w = [t // g for t in w]
+        vals = [sum(c * x for c, x in zip(w, v + [1])) for v in verts]
+        if min(vals) >= 0:
+            facets.add(tuple(w))
+        elif max(vals) <= 0:
+            facets.add(tuple(-t for t in w))
+    return d, sorted(facets)
 
 
 # ------------------------------------------------------------ float LP (exploration only)

@@ -58,3 +58,33 @@ def rank(matrix):
         if r == len(rows):
             break
     return r
+
+
+def nullspace(matrix):
+    """Exact basis of {x : matrix @ x = 0} (list of Fraction vectors), by reduced row echelon form."""
+    rows = [[Fraction(v) for v in row] for row in matrix]
+    ncols = len(rows[0]) if rows else 0
+    pivots, r = [], 0
+    for col in range(ncols):
+        pivot = next((i for i in range(r, len(rows)) if rows[i][col] != 0), None)
+        if pivot is None:
+            continue
+        rows[r], rows[pivot] = rows[pivot], rows[r]
+        piv = rows[r][col]
+        rows[r] = [v / piv for v in rows[r]]
+        for i in range(len(rows)):
+            if i != r and rows[i][col] != 0:
+                factor = rows[i][col]
+                rows[i] = [vi - factor * vr for vi, vr in zip(rows[i], rows[r])]
+        pivots.append(col)
+        r += 1
+        if r == len(rows):
+            break
+    basis = []
+    for free in (c for c in range(ncols) if c not in pivots):
+        x = [Fraction(0)] * ncols
+        x[free] = Fraction(1)
+        for i, col in enumerate(pivots):
+            x[col] = -rows[i][free]
+        basis.append(x)
+    return basis

@@ -4,9 +4,10 @@ Statements: notes/proofs/exactness.md. Exact tests use Fractions; tests marked
 "float" use HiGHS only to cross-check a criterion on random instances.
 """
 import json
+import math
 import random
 from fractions import Fraction as F
-from itertools import combinations
+from itertools import combinations, product
 from math import comb
 
 import pytest
@@ -668,6 +669,137 @@ def test_block_chords_with_one_extra_coordinate_float():
                 assert Epi - s * ER >= -1e-9
         checked += 1
     assert checked > 300
+
+
+def _block_form_ok(m, h, ds):
+    """Lemma C12' hypothesis for a facet h of the size-restricted COR(m) (coefficient tuple of
+    range_cor_facets): some T' (|T'| <= 2) with h symmetric in J = A minus T', so that
+    h = f(N, x_T') with N = |x|, and f(d, x) >= 0 for x in {0,1}^T' and every d in ds
+    (ds = "le0" means every integer d <= 0). Returns the list of such T'."""
+    pairs = list(combinations(range(m), 2))
+    lin = {i: F(h[i]) for i in range(m)}
+    quad = {pr: F(h[m + t]) for t, pr in enumerate(pairs)}
+    c0 = F(h[-1])
+    good = []
+    for r in (0, 1, 2):
+        for T in combinations(range(m), r):
+            J = [i for i in range(m) if i not in T]
+            q = lambda i, j: quad[(min(i, j), max(i, j))]
+            if len({lin[j] for j in J}) > 1 or len({q(i, j) for i, j in combinations(J, 2)}) > 1:
+                continue
+            if any(len({q(t, j) for j in J}) > 1 for t in T):
+                continue
+            cJ, cJJ = lin[J[0]], (q(J[0], J[1]) if len(J) > 1 else F(0))
+            ok = True
+            for x in product((0, 1), repeat=r):
+                base = c0 + sum(lin[t] * xt for t, xt in zip(T, x)) + sum(
+                    q(T[u], T[v]) * x[u] * x[v] for u, v in combinations(range(r), 2))
+                slope = cJ + sum(q(t, J[0]) * xt for t, xt in zip(T, x))
+                # f(d, x) = base + slope V + cJJ V(V-1)/2, V = d - |x|
+                f = lambda d: base + slope * (d - sum(x)) + cJJ * (d - sum(x)) * (d - sum(x) - 1) / 2
+                if ds == "le0":
+                    A2, A1 = cJJ / 2, slope - cJJ / 2 - cJJ * sum(x)     # f = A2 d^2 + A1 d + f(0)
+                    if A2 < 0 or (A2 == 0 and A1 > 0):
+                        ok = False
+                    else:
+                        cand = [0] if A2 == 0 else [min(0, math.floor(-A1 / (2 * A2))),
+                                                    min(0, math.ceil(-A1 / (2 * A2)))]
+                        ok = ok and min(f(d) for d in cand) >= 0
+                else:
+                    ok = ok and min(f(d) for d in ds) >= 0
+            if ok:
+                good.append(T)
+    return good
+
+
+def test_a4_facets_exact_and_block_form():
+    """Proposition C9 with |A| = 4, exact: the size-restricted correlation polytopes for the
+    ranges [1,3], [0,3], [0,4], [1,4] have 41, 68, 56, 68 facets (enumeration over all
+    10-subsets of vertices). Every facet of [1,3] (n = 6, k = 3, beta = 2) satisfies the
+    hypotheses of Lemma C12' with d = k - beta = 1, which proves Theorem C13. In the other
+    ranges only the 12 'path' facets x2(1-x0) + x3(1-x1) - x2 x3 >= 0 of [0,3] and their 12
+    complements in [1,4] are not block functions."""
+    path = lambda x: x[2] * (1 - x[0]) + x[3] * (1 - x[1]) - x[2] * x[3]
+    pairs = list(combinations(range(4), 2))
+    value = lambda h, x: sum(h[i] * x[i] for i in range(4)) + sum(
+        h[4 + t] * x[i] * x[j] for t, (i, j) in enumerate(pairs)) + h[-1]
+    cube = list(product((0, 1), repeat=4))
+    expected = {(1, 3): (41, 0), (0, 3): (68, 12), (0, 4): (56, 0), (1, 4): (68, 12)}
+    for (lo, hi), (nf, nbad) in expected.items():
+        d, facets = G.range_cor_facets(4, lo, hi)
+        assert d == 10 and len(facets) == nf
+        ds = [1] if lo == 1 else "le0"                    # d = k - beta: 1 for lo = 1, any d <= 0 for lo = 0
+        bad = [h for h in facets if not _block_form_ok(4, h, ds)]
+        assert len(bad) == nbad
+        for h in bad:                                     # a relabelling of the path facet (or its complement)
+            assert any(all(value(h, x) == (path([x[i] for i in perm]) if lo == 0 else
+                                           path([1 - x[i] for i in perm])) for x in cube)
+                       for perm in __import__("itertools").permutations(range(4)))
+
+
+def test_split_facet_identities():
+    """Theorem C13 (sympy): with s y_i^2 = (b+s) y_i - b + c_i, c_i = (1-a_i)(b-a_i), the 2+2
+    split value Lambda = (P_y - 1)(b - s P_y) - (P_a - 1)(2 - b - P_a) (which is
+    (1-s) E_mu[-(U-1)(V-1)] after Sum_A y = 1 + b/s, Sum_A a = 3 - b) equals
+    E_pi[g] - 2 s y_1 y_2 for g = (U-1)(U+K_B-2); and d/ds (s y1 y2) = y1 y2 (1 - s sum (1-y_i)/(b+s-2 s y_i))."""
+    import sympy as sp
+    b, s, a1, a2, y1, y2, Pa, Py = sp.symbols("b s a1 a2 y1 y2 P_a P_y")
+    c1, c2 = (1 - a1) * (b - a1), (1 - a2) * (b - a2)
+    rel = {y1 ** 2: ((b + s) * y1 - b + c1) / s, y2 ** 2: ((b + s) * y2 - b + c2) / s}
+    lam = (y1 + y2 - 1) * (b - s * (y1 + y2)) - (a1 + a2 - 1) * (2 - b - a1 - a2)
+    lam_red = sp.expand(sp.expand(lam).subs(rel))
+    Epi_g = 2 * a1 * a2 - 2 * (1 - b) * (a1 + a2 - 1)                 # E_pi[(U-1)(U+K_B-2)], beta = 2
+    assert sp.simplify(lam_red - (Epi_g - 2 * s * y1 * y2)) == 0
+    Qy, Qa = 1 + b / s - Py, 3 - b - Pa
+    assert sp.simplify(s * (Py - 1) * (Qy - 1) - (Pa - 1) * (Qa - 1)
+                       - ((Py - 1) * (b - s * Py) - (Pa - 1) * (2 - b - Pa))) == 0
+    Y = sp.Function("Y")
+    dy = lambda y: -y * (1 - y) / (b + s - 2 * s * y)                # implicit derivative of y_s(a) in s
+    d = sp.diff(s * Y(s) * sp.Function("Z")(s), s).subs(
+        {sp.Derivative(Y(s), s): dy(Y(s)), sp.Derivative(sp.Function("Z")(s), s): dy(sp.Function("Z")(s))})
+    target = Y(s) * sp.Function("Z")(s) * (1 - s * ((1 - Y(s)) / (b + s - 2 * s * Y(s))
+                                                   + (1 - sp.Function("Z")(s)) / (b + s - 2 * s * sp.Function("Z")(s))))
+    assert sp.simplify(d - target) == 0
+    yv = sp.Symbol("y")
+    assert sp.simplify(sp.diff((1 - yv) / (b + s - 2 * s * yv), yv) + (b - s) / (b + s - 2 * s * yv) ** 2) == 0
+
+
+def test_split_facet_n6_float():
+    """Theorem C13 (float): at n = 6, k = 3, beta = 2 minimal points with four distinct small
+    coordinates, every 2+2 split value is >= 0, the comparison root (other pair sent to its
+    extreme vertex) is >= s*, the comparison value is >= 0, and the range-[1,3] law mu_A exists (LP)."""
+    import numpy as np
+    from scipy.optimize import linprog
+    rng = random.Random(58)
+    pairs = list(combinations(range(4), 2))
+    atoms = [x for x in product((0, 1), repeat=4) if 1 <= sum(x) <= 3]
+    Aeq = np.array([[1.0] + list(x) + [x[i] * x[j] for i, j in pairs] for x in atoms]).T
+    checked = 0
+    for _ in range(400):
+        g_ = _general_minimal_point(rng, 6, 3, 2)
+        if g_ is None:
+            continue
+        b, aA = g_
+        _, _, _, s, z = G.peeling_parameters([b, b] + aA, 3)
+        y = z[2:]
+        mom = [(u - s * v) / (1 - s) for u, v in zip(
+            aA + [aA[i] * aA[j] for i, j in pairs], y + [y[i] * y[j] for i, j in pairs])]
+        res = linprog(np.zeros(len(atoms)), A_eq=Aeq, b_eq=np.array([1.0] + mom), bounds=(0, None), method="highs")
+        assert res.status == 0
+        for (i, l), (j, m) in [((0, 1), (2, 3)), ((0, 2), (1, 3)), ((0, 3), (1, 2))]:
+            Pa, Qa, Py = aA[i] + aA[l], aA[j] + aA[m], y[i] + y[l]
+            lam = (Py - 1) * (b - s * Py) - (Pa - 1) * (2 - b - Pa)
+            assert lam >= -1e-9
+            Q = Qa
+            ext = [0.0, Q] if Q <= b else [Q - b, b]
+            pc = [b, b, aA[i], aA[l]] + ext
+            _, _, _, sc, zc = G.peeling_parameters(pc, 3)
+            assert sc >= s - 1e-9
+            Pyc = zc[2] + zc[3]
+            assert (Pyc - 1) * (b - sc * Pyc) - (Pa - 1) * (2 - b - Pa) >= -1e-9
+            assert s * y[i] * y[l] <= sc * zc[2] * zc[3] + 1e-12
+        checked += 1
+    assert checked > 200
 
 
 def test_rn_example_3_2_verdicts():
