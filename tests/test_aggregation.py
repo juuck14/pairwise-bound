@@ -128,3 +128,65 @@ def test_k2_four_arbitrary_classes_fail_at_n9_exact():
     from scripts.verify_k2_aggregation_counterexamples import check, set_partitions
     p9 = [Fr(s) for s in ["0.0081", "0.024", "0.0348", "0.0384", "0.0433", "0.0446", "0.3587", "0.3903", "0.5778"]]
     assert check("C37", p9, list(set_partitions(9, 4)))
+
+
+def _lambda_t_float(pR, t):
+    """Lambda_t(p_R) = min sum w_ij p_i p_j s.t. w(E(S)) >= f_t(|S|) for all S (k2_structure Prop. K1)."""
+    import itertools
+    import math
+    from scipy.optimize import linprog
+    f = lambda s: max([0] + [(1 if s + j >= 2 else 0) - (2 - j) * s - math.comb(j, 2) for j in range(t + 1)])
+    m = len(pR)
+    if m < 2:
+        return 0.0
+    E = list(itertools.combinations(range(m), 2))
+    A, b = [], []
+    for s in range(2, m + 1):
+        for S in itertools.combinations(range(m), s):
+            A.append([-(1 if (i in S and j in S) else 0) for i, j in E])
+            b.append(-f(s))
+    r = linprog([pR[i] * pR[j] for i, j in E], A_ub=A, b_ub=b, bounds=(None, None), method="highs")
+    return r.fun
+
+
+def test_k1_split_upper_bound_is_valid_float():
+    """Prop. K1: Pbar(n,2,p) <= 2 P_R - P_R P_T + e2(p_T) + Lambda_t(p_R) for every split (R, T)."""
+    import itertools
+    rng = random.Random(5)
+    e2 = lambda v: (sum(v) ** 2 - sum(x * x for x in v)) / 2
+    for _ in range(12):
+        n = rng.randint(4, 6)
+        p = [rng.random() ** rng.choice([1, 2, 4]) for _ in range(n)]
+        tight, _ = G.float_tight(p, 2)
+        for r in range(1, n):
+            for R in itertools.combinations(range(n), r):
+                pR = [p[i] for i in R]
+                pT = [p[i] for i in range(n) if i not in R]
+                PR, PT = sum(pR), sum(pT)
+                ub = 2 * PR - PR * PT + e2(pT) + _lambda_t_float(pR, len(pT))
+                assert tight <= ub + 1e-7
+
+
+def test_k2_closed_form_of_lambda_t():
+    """Prop. K2: for t >= |R|, Lambda_t(p_R) = e2(p_R) - p_max (P_R - p_max) (forest polytope, star)."""
+    rng = random.Random(6)
+    for _ in range(20):
+        m = rng.randint(2, 6)
+        pR = [rng.random() for _ in range(m)]
+        t = rng.randint(m, m + 2)
+        e2 = (sum(pR) ** 2 - sum(x * x for x in pR)) / 2
+        mx = max(pR)
+        assert abs(_lambda_t_float(pR, t) - (e2 - mx * (sum(pR) - mx))) < 1e-8
+
+
+def test_bp_over_pbar_exceeds_1505_exact():
+    """k2_report: with p = (1, b, a x 40), Pbar(42,2,p) = KHW(rest) (X_1 = 1 a.s. and R-N Thm 2.3),
+    and the Boros-Prekopa bound exceeds it by a factor > 1.505 (exact rationals)."""
+    from fractions import Fraction as F
+    a, b = F(933, 100000), F(28128, 100000)
+    rest = [b] + [a] * 40
+    S, mx = sum(rest), max(rest)
+    pbar = min(F(1), S - mx * (S - mx))
+    assert pbar == F(2146509, 3906250)
+    ratio = G.bp_value([F(1)] + rest, 2) / pbar
+    assert ratio > F(1505, 1000)
