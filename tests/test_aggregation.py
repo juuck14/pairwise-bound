@@ -209,3 +209,13 @@ def test_three_run_lp_matches_pbar_when_below_one_float():
         assert v3 <= tight + 1e-7
         if tight < 1 - 1e-7:
             assert tight - v3 < 1e-7
+
+
+def test_three_run_law_is_exactly_optimal_at_hard_points():
+    """R3' holds exactly (rational arithmetic) at the C36 and C37 points: a law on atoms with <= 3 runs
+    reaches the exact dual upper bound."""
+    from fractions import Fraction as Fr
+    from scripts.verify_k2_aggregation_counterexamples import check_three_runs
+    for ps in (["0.0055", "0.0108", "0.0318", "0.034", "0.0647", "0.3735", "0.3831", "0.5845"],
+               ["0.0081", "0.024", "0.0348", "0.0384", "0.0433", "0.0446", "0.3587", "0.3903", "0.5778"]):
+        assert check_three_runs("point", [Fr(s) for s in ps])

@@ -95,3 +95,45 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+def exact_three_run_value(p):
+    """Exact feasible law supported on atoms with <= 3 runs (sorted p), built on the HiGHS support of the
+    restricted LP; returns its P(S >= 2) as a Fraction (a lower bound on Pbar)."""
+    from pwbound.runs_lp import atoms_with_runs
+    from scipy.sparse import lil_matrix
+    n = len(p)
+    atoms = atoms_with_runs(n, 3)
+    pairs = list(itertools.combinations(range(n), 2))
+    pos = {pr: 1 + n + t for t, pr in enumerate(pairs)}
+    A = lil_matrix((1 + n + len(pairs), len(atoms)))
+    for c, x in enumerate(atoms):
+        A[0, c] = 1
+        ones = [i for i in range(n) if x[i]]
+        for i in ones:
+            A[1 + i, c] = 1
+        for i, j in itertools.combinations(ones, 2):
+            A[pos[(i, j)], c] = 1
+    pf = [float(x) for x in p]
+    b = np.array([1.0] + pf + [pf[i] * pf[j] for i, j in pairs])
+    res = linprog(-np.array([1.0 if sum(x) >= K else 0.0 for x in atoms]), A_eq=A.tocsr(), b_eq=b,
+                  bounds=(0, None), method="highs-ds")
+    sup = [c for c in range(len(atoms)) if res.x[c] > 1e-11]
+    rhs = [Fr(1)] + list(p) + [p[i] * p[j] for i, j in pairs]
+    rows = [[1] * len(sup)] + [[atoms[c][i] for c in sup] for i in range(n)] + \
+           [[atoms[c][i] * atoms[c][j] for c in sup] for i, j in pairs]
+    M = [rows[i] + [-rhs[i]] for i in range(len(rows))]
+    for v in nullspace(M):
+        if v[-1] != 0:
+            x = [t / v[-1] for t in v][:-1]
+            if min(x) >= 0:
+                return sum(x[t] for t, c in enumerate(sup) if sum(atoms[c]) >= K)
+    raise RuntimeError("no exact nonnegative law on the support")
+
+
+def check_three_runs(name, p):
+    """R3' at one point: exact <=3-run law value L equals the exact dual bound U, so Pbar = L = U."""
+    U = exact_dual_bound(p)
+    L = exact_three_run_value(p)
+    print(f"{name}: <=3-run law value {float(L):.12f}, dual bound {float(U):.12f}, equal: {L == U}")
+    return L == U
