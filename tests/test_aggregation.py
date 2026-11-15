@@ -119,3 +119,12 @@ def test_proposition_a2_independent_law_approximates_k2():
         s2 = (s1 * s1 - sum(x * x for x in p)) / 2
         tight, _ = G.float_tight(p, 2)
         assert pind <= tight + 1e-7 and tight <= min(1, s2) + 1e-7 and min(1, s2) <= c * pind + 1e-12
+
+
+def test_k2_four_arbitrary_classes_fail_at_n9_exact():
+    """Claim C37: at this n = 9 point no partition into <= 4 classes (all 11,051, not only contiguous)
+    gives an exact aggregated LP; certified gap 4.2e-5 (about 40 s)."""
+    from fractions import Fraction as Fr
+    from scripts.verify_k2_aggregation_counterexamples import check, set_partitions
+    p9 = [Fr(s) for s in ["0.0081", "0.024", "0.0348", "0.0384", "0.0433", "0.0446", "0.3587", "0.3903", "0.5778"]]
+    assert check("C37", p9, list(set_partitions(9, 4)))
