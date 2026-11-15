@@ -190,3 +190,22 @@ def test_bp_over_pbar_exceeds_1505_exact():
     assert pbar == F(2146509, 3906250)
     ratio = G.bp_value([F(1)] + rest, 2) / pbar
     assert ratio > F(1505, 1000)
+
+
+def test_three_run_lp_matches_pbar_when_below_one_float():
+    """Hypothesis R3' (k2_structure §13, exploration): for k = 2 and Pbar < 1, the LP over atoms whose ones
+    form <= 3 runs in sorted order equals Pbar; it is always a lower bound. Includes the C36/C37 points."""
+    from pwbound.runs_lp import runs_lp
+    pts = [[0.0055, 0.0108, 0.0318, 0.034, 0.0647, 0.3735, 0.3831, 0.5845],
+           [0.0081, 0.024, 0.0348, 0.0384, 0.0433, 0.0446, 0.3587, 0.3903, 0.5778]]
+    rng = random.Random(7)
+    while len(pts) < 14:
+        p = sorted(rng.random() ** rng.choice([2, 3, 4]) for _ in range(rng.randint(6, 9)))
+        if min(sum(p) - x for x in p) < 2:
+            pts.append(p)
+    for p in pts:
+        tight, _ = G.float_tight(p, 2)
+        v3, _ = runs_lp(p, 2, 3)
+        assert v3 <= tight + 1e-7
+        if tight < 1 - 1e-7:
+            assert tight - v3 < 1e-7
