@@ -101,3 +101,21 @@ def test_k2_four_groups_fail_at_n8_exact():
     from pwbound.aggregation import contiguous_partitions
     low = min(exact_feasible_value(part) for part in contiguous_partitions(n, 4))
     assert low > U and float(low - U) > 2.9e-6
+
+
+def test_proposition_a2_independent_law_approximates_k2():
+    """k2_structure Prop. A2: P_ind(S>=2) <= Pbar(n,2,p) <= min(1,S2) <= (2+2 sqrt 2) P_ind(S>=2)."""
+    import math
+    rng = random.Random(4)
+    c = 2 + 2 * math.sqrt(2)
+    for _ in range(40):
+        n = rng.randint(3, 6)
+        p = [rng.random() ** rng.choice([1, 2, 5]) for _ in range(n)]
+        d0, d1 = 1.0, 0.0
+        for x in p:
+            d0, d1 = d0 * (1 - x), d1 * (1 - x) + d0 * x
+        pind = 1 - d0 - d1
+        s1 = sum(p)
+        s2 = (s1 * s1 - sum(x * x for x in p)) / 2
+        tight, _ = G.float_tight(p, 2)
+        assert pind <= tight + 1e-7 and tight <= min(1, s2) + 1e-7 and min(1, s2) <= c * pind + 1e-12
