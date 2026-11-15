@@ -219,3 +219,16 @@ def test_three_run_law_is_exactly_optimal_at_hard_points():
     for ps in (["0.0055", "0.0108", "0.0318", "0.034", "0.0647", "0.3735", "0.3831", "0.5845"],
                ["0.0081", "0.024", "0.0348", "0.0384", "0.0433", "0.0446", "0.3587", "0.3903", "0.5778"]):
         assert check_three_runs("point", [Fr(s) for s in ps])
+
+
+def test_three_runs_fail_but_segment_designs_reach_pbar_exact():
+    """Claim C38: at this n = 13 point (Pbar < 1) the exact Pbar is 1949345491/3000000000; a mixture of
+    segment-design columns reaches it exactly, while the best law on <= 3-run atoms is 7.78e-4 lower."""
+    from fractions import Fraction as Fr
+    from scripts.verify_k2_aggregation_counterexamples import (exact_optimal_dual, exact_segment_value,
+                                                               exact_three_run_value)
+    p = sorted([Fr("0.0219")] * 6 + [Fr(s) for s in ["0.0259", "0.0278", "0.0288", "0.0398", "0.3486", "0.3688", "0.4033"]])
+    U, ok, _ = exact_optimal_dual(p)
+    assert ok and U == Fr(1949345491, 3000000000)
+    assert exact_segment_value(p, 3) == U
+    assert U - exact_three_run_value(p) > Fr(7, 10000)

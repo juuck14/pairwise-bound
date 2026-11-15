@@ -137,3 +137,75 @@ def check_three_runs(name, p):
     L = exact_three_run_value(p)
     print(f"{name}: <=3-run law value {float(L):.12f}, dual bound {float(U):.12f}, equal: {L == U}")
     return L == U
+
+
+def exact_segment_value(p, r=3):
+    """Exact feasible law that mixes segment-design columns (pwbound.segment_lp), built on the HiGHS
+    support; returns its P(S >= 2) as a Fraction (a lower bound on Pbar)."""
+    from pwbound.segment_lp import segment_columns
+    from scipy.sparse import csc_matrix
+    n = len(p)
+    pairs = list(itertools.combinations(range(n), 2))
+    pos = {pr: 1 + n + t for t, pr in enumerate(pairs)}
+    cols = list(segment_columns(n, r))
+
+    def column_exact(segs):
+        marg, within = {}, {}
+        for a, b, c in segs:
+            L = b - a + 1
+            for i in range(a, b + 1):
+                marg[i] = Fr(c, L)
+            for i, j in itertools.combinations(range(a, b + 1), 2):
+                within[(i, j)] = Fr(c * (c - 1), L * (L - 1))
+        ent = {0: Fr(1)}
+        for i, v in marg.items():
+            ent[1 + i] = v
+        for i, j in itertools.combinations(sorted(marg), 2):
+            v = within.get((i, j), marg[i] * marg[j])
+            if v:
+                ent[pos[(i, j)]] = v
+        return ent
+
+    data, rows, cids = [], [], []
+    for cid, segs in enumerate(cols):
+        for row, v in column_exact(segs).items():
+            data.append(float(v)); rows.append(row); cids.append(cid)
+    A = csc_matrix((data, (rows, cids)), shape=(1 + n + len(pairs), len(cols)))
+    pf = [float(x) for x in p]
+    b = np.array([1.0] + pf + [pf[i] * pf[j] for i, j in pairs])
+    cost = [-1.0 if sum(c for _, _, c in segs) >= K else 0.0 for segs in cols]
+    res = linprog(cost, A_eq=A, b_eq=b, bounds=(0, None), method="highs-ds")
+    sup = [c for c in range(len(cols)) if res.x[c] > 1e-11]
+    rhs = [Fr(1)] + list(p) + [p[i] * p[j] for i, j in pairs]
+    ents = [column_exact(cols[c]) for c in sup]
+    M = [[e.get(row, Fr(0)) for e in ents] + [-rhs[row]] for row in range(len(rhs))]
+    for v in nullspace(M):
+        if v[-1] != 0:
+            x = [t / v[-1] for t in v][:-1]
+            if min(x) >= 0:
+                return sum(x[t] for t, c in enumerate(sup) if sum(cc for _, _, cc in cols[c]) >= K)
+    raise RuntimeError("no exact nonnegative mixture on the support")
+
+
+def exact_optimal_dual(p,K=2):
+    """Exact optimal certificate q: solve q(x)=g(x) on the support of the full-LP optimal law (exactly),
+    then verify q(x) >= g(x) on all x. Returns (U, ok)."""
+    n=len(p); pf=[float(x) for x in p]; pairs=list(itertools.combinations(range(n),2))
+    states=list(itertools.product((0,1),repeat=n))
+    A=np.array([[1]+list(x)+[x[i]*x[j] for i,j in pairs] for x in states],float).T
+    b=np.array([1.0]+pf+[pf[i]*pf[j] for i,j in pairs])
+    r=linprog(-np.array([1.0 if sum(x)>=K else 0 for x in states]),A_eq=A,b_eq=b,bounds=(0,None),method='highs-ds',
+              options={'primal_feasibility_tolerance':1e-10,'dual_feasibility_tolerance':1e-10})
+    sup=[states[i] for i in range(len(states)) if r.x[i]>1e-12]
+    # also include states whose reduced cost is ~0 (tight) to pin down q
+    d=-r.eqlin.marginals; slack=[d[0]+sum(d[1+i]*x[i] for i in range(n))+sum(d[1+n+t]*x[i]*x[j] for t,(i,j) in enumerate(pairs))-(1 if sum(x)>=K else 0) for x in states]
+    tight=[states[i] for i in range(len(states)) if abs(slack[i])<1e-9]
+    rows=[[Fr(1)]+[Fr(v) for v in x]+[Fr(x[i]*x[j]) for i,j in pairs]+[-Fr(1 if sum(x)>=K else 0)] for x in tight]
+    basis=nullspace(rows)
+    sols=[v for v in basis if v[-1]!=0]
+    if len(basis)!=1 or not sols: return None, False, len(basis)
+    q=[t/sols[0][-1] for t in sols[0]][:-1]
+    val=lambda x: q[0]+sum(q[1+i]*x[i] for i in range(n))+sum(q[1+n+t]*x[i]*x[j] for t,(i,j) in enumerate(pairs))
+    ok=all(val(x)>=(1 if sum(x)>=K else 0) for x in states)
+    U=q[0]+sum(q[1+i]*p[i] for i in range(n))+sum(q[1+n+t]*p[i]*p[j] for t,(i,j) in enumerate(pairs))
+    return U, ok, 1
