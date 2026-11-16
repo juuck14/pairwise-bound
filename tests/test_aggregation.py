@@ -232,3 +232,14 @@ def test_three_runs_fail_but_segment_designs_reach_pbar_exact():
     assert ok and U == Fr(1949345491, 3000000000)
     assert exact_segment_value(p, 3) == U
     assert U - exact_three_run_value(p) > Fr(7, 10000)
+
+
+def test_s3a_exact_at_structured_points():
+    """S3a (k2_structure §16): at structured hard points (equal top block, equal middle block, near-tie
+    blocks) the exact optimal dual (valid on all 2^n states) equals an exact law mixing S3a columns."""
+    from fractions import Fraction as F
+    from scripts.verify_k2_aggregation_counterexamples import check_s3a
+    for lst in (["0.01", "0.02", "0.03", "0.05"] + ["0.3"] * 5,
+                ["0.003", "0.006"] + ["0.06"] * 5 + ["0.3", "0.35", "0.45"],
+                ["0.00384", "0.00415", "0.00419", "0.00421", "0.09987", "0.09995", "0.10133", "0.10138", "0.10405", "0.56148"]):
+        assert check_s3a("point", sorted(F(x) for x in lst))

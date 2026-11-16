@@ -209,3 +209,61 @@ def exact_optimal_dual(p,K=2):
     ok=all(val(x)>=(1 if sum(x)>=K else 0) for x in states)
     U=q[0]+sum(q[1+i]*p[i] for i in range(n))+sum(q[1+n+t]*p[i]*p[j] for t,(i,j) in enumerate(pairs))
     return U, ok, 1
+
+
+def exact_s3a_value(p):
+    """Exact law mixing S3a columns (<= 3 segments, at most one with 1 < c < L) on the HiGHS support."""
+    from pwbound.segment_lp import segment_columns
+    from scipy.sparse import csc_matrix
+    n = len(p)
+    pairs = list(itertools.combinations(range(n), 2))
+    pos = {pr: 1 + n + t for t, pr in enumerate(pairs)}
+    cols = [s for s in segment_columns(n, 3) if sum(1 for a, b, c in s if c < b - a + 1) <= 1]
+
+    def ent_of(segs):
+        marg, within = {}, {}
+        for a, b, c in segs:
+            L = b - a + 1
+            for i in range(a, b + 1):
+                marg[i] = Fr(c, L)
+            for i, j in itertools.combinations(range(a, b + 1), 2):
+                within[(i, j)] = Fr(c * (c - 1), L * (L - 1))
+        e = {0: Fr(1)}
+        for i, v in marg.items():
+            e[1 + i] = v
+        for i, j in itertools.combinations(sorted(marg), 2):
+            v = within.get((i, j), marg[i] * marg[j])
+            if v:
+                e[pos[(i, j)]] = v
+        return e
+
+    data, rows, cids = [], [], []
+    for cid, segs in enumerate(cols):
+        for row, v in ent_of(segs).items():
+            data.append(float(v)); rows.append(row); cids.append(cid)
+    A = csc_matrix((data, (rows, cids)), shape=(1 + n + len(pairs), len(cols)))
+    pf = [float(x) for x in p]
+    b = np.array([1.0] + pf + [pf[i] * pf[j] for i, j in pairs])
+    cost = [-1.0 if sum(c for _, _, c in s) >= K else 0.0 for s in cols]
+    res = linprog(cost, A_eq=A, b_eq=b, bounds=(0, None), method="highs-ds",
+                  options={"primal_feasibility_tolerance": 1e-10, "dual_feasibility_tolerance": 1e-10})
+    sup = [c for c in range(len(cols)) if res.x[c] > 1e-12]
+    rhs = [Fr(1)] + list(p) + [p[i] * p[j] for i, j in pairs]
+    ents = [ent_of(cols[c]) for c in sup]
+    M = [[e.get(row, Fr(0)) for e in ents] + [-rhs[row]] for row in range(len(rhs))]
+    for v in nullspace(M):
+        if v[-1] != 0:
+            x = [t / v[-1] for t in v][:-1]
+            if min(x) >= 0:
+                return sum(x[t] for t, c in enumerate(sup) if sum(cc for _, _, cc in cols[c]) >= K)
+    return None
+
+
+def check_s3a(name, p):
+    """S3a at one point, exactly: exact optimal dual U (valid on all 2^n states) vs exact S3a law value."""
+    U, ok, _ = exact_optimal_dual(p)
+    S = exact_s3a_value(p)
+    eq = ok and S is not None and S == U
+    print(f"{name}: Pbar = {float(U) if U is not None else None:.12f} (dual valid: {ok}); S3a law "
+          f"{float(S) if S is not None else None}; equal: {eq}")
+    return eq
