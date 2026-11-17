@@ -1,0 +1,22 @@
+n = 13, k = 2, sorted marginals p = ['219/10000', '219/10000', '219/10000', '219/10000', '219/10000', '219/10000', '259/10000', '139/5000', '18/625', '199/5000', '1743/5000', '461/1250', '4033/10000']
+S1 = sum p = 1.374400
+
+[1] Boros-Prekopa bound (closed form)          0.6838286815
+[2] full LP over 2^13 = 8192 states (HiGHS)    0.6497818303   (1.0 s)
+[3] <= 3-run LP (refuted hypothesis R3')        0.6490036000   gap to [2] = 7.78e-04
+[4] S3a segment-design LP (18760 columns)  0.6497818303   gap to [2] = -2.22e-16   (1.9 s)
+    columns used (intervals [a,b] in sorted order, c = number of ones drawn uniformly):
+      0.376039  [11..13] choose 2
+      0.293974  (all zero)
+      0.073726  [2..11] choose 1 + [13..13]
+      0.044189  [3..9] choose 1 + [11..11]
+      0.039702  [5..10] choose 1 + [12..12]
+      0.030247  [13..13]
+      0.020046  [12..13]
+      0.019851  [2..4] choose 1 + [12..12]
+      ... 76 more
+
+[5] exact (rational) check
+    certificate q >= 1{|x|>=2} checked on all 8192 states: Pbar <= 1949345491/3000000000   (2.7 s)
+    exact mixture of S3a columns attains          1949345491/3000000000   (2.6 s)
+    VERDICT: S3a = Pbar exactly at this point: True

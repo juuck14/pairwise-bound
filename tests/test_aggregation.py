@@ -243,3 +243,13 @@ def test_s3a_exact_at_structured_points():
                 ["0.003", "0.006"] + ["0.06"] * 5 + ["0.3", "0.35", "0.45"],
                 ["0.00384", "0.00415", "0.00419", "0.00421", "0.09987", "0.09995", "0.10133", "0.10138", "0.10405", "0.56148"]):
         assert check_s3a("point", sorted(F(x) for x in lst))
+
+
+def test_s3a_float_lp_matches_full_lp_at_c38_point():
+    """segment_lp(..., one_design=True) is the S3a LP used by scripts/demo_k2.py."""
+    from pwbound.general import float_tight
+    from pwbound.segment_lp import s3a_columns, segment_lp
+    p = sorted([0.0219] * 6 + [0.0259, 0.0278, 0.0288, 0.0398, 0.3486, 0.3688, 0.4033])
+    assert sum(1 for _ in s3a_columns(13)) == 18760
+    v, _ = segment_lp(p, 2, 3, one_design=True)
+    assert abs(v - float_tight(p, 2)[0]) < 1e-9

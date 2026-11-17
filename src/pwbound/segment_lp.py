@@ -27,8 +27,17 @@ def segment_columns(n, r):
     yield from rec(0, r, [])
 
 
-def segment_lp(p, k, r):
-    """(value, column weights) of the segment-design LP (p sorted inside)."""
+def s3a_columns(n):
+    """S3a columns: <= 3 intervals, at most one of them a design (c < L), the others full runs; O(n^7) many."""
+    for segs in segment_columns(n, 3):
+        if sum(1 for a, b, c in segs if c < b - a + 1) <= 1:
+            yield segs
+
+
+def segment_lp(p, k, r, one_design=False):
+    """(value, column weights) of the segment-design LP (p sorted inside).
+
+    one_design=True keeps only columns with at most one proper design interval (with r = 3: S3a)."""
     import numpy as np
     from scipy.optimize import linprog
     from scipy.sparse import csc_matrix
@@ -37,7 +46,8 @@ def segment_lp(p, k, r):
     pairs = list(combinations(range(n), 2))
     pos = {pr: 1 + n + t for t, pr in enumerate(pairs)}
     data, rows, cols, cost = [], [], [], []
-    cols_list = list(segment_columns(n, r))
+    cols_list = [s for s in segment_columns(n, r)
+                 if not one_design or sum(1 for a, b, c in s if c < b - a + 1) <= 1]
     for col_id, segs in enumerate(cols_list):
         marg = {}
         within = {}
